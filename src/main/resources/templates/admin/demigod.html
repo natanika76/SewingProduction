@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+
+<div class="container">
+    <h2>Список админов</h2>
+    <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">ФИО</th>
+            <th scope="col">Логин</th>
+            <th scope="col"></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="admin : ${admins}">
+            <td th:text="${admin.name}"></td>
+            <td th:text="${admin.username}"></td>
+            <td>
+                <a th:href="@{/demigod/edit/{id}(id=${admin.id})}" class="btn btn-warning btn-sm">
+                    Edit
+                </a>
+
+                <!-- Добавляем атрибут data-bs-toggle и data-bs-target для модального окна -->
+                <a href="#" class="btn btn-danger btn-sm"
+                   data-bs-toggle="modal"
+                   th:attr="data-bs-target='#deleteModal' + ${admin.id}">
+                    Del
+                </a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- Кнопка для добавления новой швеи -->
+    <a th:href="@{/demigod/new}" class="btn btn-primary">Добавить админа</a>
+    <!-- Кнопка для смены пароля -->
+    <a th:href="@{/demigod/chpas}" class="btn btn-primary">Сменить супер-пароль</a>
+</div>
+
+<!-- Модальное окно для подтверждения удаления -->
+<div th:each="admin : ${admins}">
+    <div th:attr="id='deleteModal' + ${admin.id}" class="modal fade" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Подтверждение удаления</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Ваш текст подтверждения удаления -->
+                    Уверены, что хотите удалить админа?
+                </div>
+                <div class="modal-footer">
+                    <!-- Кнопка для подтверждения удаления -->
+                    <a th:href="@{/demigod/delete/{id}(id=${admin.id})}" class="btn btn-danger">Удалить</a>
+                    <!-- Кнопка для закрытия модального окна -->
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

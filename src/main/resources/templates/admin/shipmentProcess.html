@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+<div th:replace="~{fragments/headerFragment}"></div>
+<br/>
+<div class="container">
+    <h2>Отгрузка</h2>
+    <form  th:action="@{/admin/shipmentProcess}" method="get">
+        <div class="form-group">
+            <label for="customer" class="form-label"> Сортировка по заказчику:</label>
+            <select id="customer" name="customer" class="form-select">
+                <option value="0" th:selected="${selectedCustomerId eq 0}">Все заказчики</option>
+                <option th:each="customer : ${customers}" th:value="${customer.id}" th:text="${customer.name}" th:selected="${customer.id eq selectedCustomerId}"></option>
+            </select>
+            <!-- Выпадающий список для выбора категории -->
+            <label for="category" class="form-label">Сортировка по категории:</label>
+            <select id="category" name="category" class="form-select">
+                <option value="0" th:selected="${selectedCategoryId eq 0}">Все категории</option>
+                <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}" th:data-customer-id="${category.customer.id}" th:selected="${category.id eq selectedCategoryId}"></option>
+                <input type="hidden" id="selectedCategoryId" name="selectedCategoryId" th:value="${selectedCategoryId}" /><!-- Скрытое поле для хранения выбранной категории -->
+            </select>
+            <label for="nameMaterial" class="form-label">Сортировка по материалу:</label>
+            <select id="nameMaterial" name="nameMaterial" class="form-select">
+                <option value="" th:selected="${selectedNameMaterial eq ''}">Все материалы</option>
+                <option th:each="material : ${nameMaterials}" th:value="${material}" th:text="${material}" th:selected="${material eq selectedNameMaterial}"></option>
+                <input type="hidden" id="selectedNameMaterial" name="selectedNameMaterial" th:value="${selectedNameMaterial}"/><!-- Скрытое поле для хранения выбранного материала -->
+            </select>
+        </div>
+    </form>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Заказчик</th>
+            <th>Категория</th>
+            <th>Материал</th>
+            <th>Отгружено</th>
+            <th></th>
+            <th>Задание</th>
+            <th>Действия</th>
+            <th>Упаковано</th>
+            <th>Отгружено</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="warehouse : ${warehousesDtos}">
+            <td th:text="${warehouse.customerName}"/>
+            <td th:text="${warehouse.categoryName}"/>
+            <td th:text="${warehouse.nameMaterial}"/>
+            <td th:text="${warehouse.done}"/>
+            <td> из </td>
+            <td th:text="${warehouse.balance}"></td>
+            <td>
+                <a th:href="@{'/admin/shipmentProcess/add/'+ ${warehouse.id}}" class="btn btn-warning btn-sm">
+                    Ввод данных
+                </a>
+                <a th:href="@{'/admin/shipmentProcess/show/'+ ${warehouse.id}}" class="btn btn-warning btn-sm">
+                    Аналитика
+                </a>
+            </td>
+          <td>
+                <div class="progress-container">
+                    <div class="progress" style="height: 10px; margin-bottom: 5px;">
+                        <div class="progress-bar bg-success" role="progressbar"
+                             th:style="'width: ' + ${warehouse.plan} + '%'" th:aria-valuenow="${warehouse.plan}" aria-valuemin="0"
+                             aria-valuemax="100"></div>
+                    </div>
+                    <div class="progress" style="height: 10px; margin-bottom: 5px;">
+                        <div th:if="${warehouse.plan > warehouse.packaging * 1.2}" class="progress-bar bg-danger" role="progressbar"
+                             th:style="'width: ' + ${warehouse.packaging} + '%'" th:aria-valuenow="${warehouse.packaging}" aria-valuemin="0"
+                             aria-valuemax="100"></div>
+                        <div th:unless="${warehouse.plan > warehouse.packaging * 1.2}" class="progress-bar bg-success"
+                             role="progressbar" th:style="'width: ' + ${warehouse.packaging} + '%'" th:aria-valuenow="${warehouse.packaging}"
+                             aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+            <td>
+            <div class="progress-container">
+                <div class="progress" style="height: 10px;margin-bottom: 5px; ">
+                    <div class="progress-bar bg-success" role="progressbar" th:style="'width: ' + ${warehouse.plan} + '%'"
+                         th:aria-valuenow="${warehouse.plan}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="progress" style="height: 10px; margin-bottom: 5px;">
+                    <div th:if="${warehouse.plan > warehouse.shipment * 1.2}" class="progress-bar bg-danger" role="progressbar"
+                         th:style="'width: ' + ${warehouse.shipment} + '%'" th:aria-valuenow="${warehouse.shipment}" aria-valuemin="0"
+                         aria-valuemax="100"></div>
+                    <div th:unless="${warehouse.plan > warehouse.shipment * 1.2}" class="progress-bar bg-success"
+                         role="progressbar" th:style="'width: ' + ${warehouse.shipment} + '%'" th:aria-valuenow="${warehouse.shipment}"
+                         aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<script th:inline="javascript">
+    // Отправляем дату сразу после выбора
+    document.addEventListener('DOMContentLoaded', function() {
+        var customersNameInput = document.getElementById('customer');
+        var categoriesNameInput = document.getElementById('category');
+        var nameMaterialInput = document.getElementById('nameMaterial');
+
+        customersNameInput.addEventListener('change', function() {
+            // Создаем объект формы
+            var form = document.querySelector('form');
+            // Отправляем форму
+            form.submit();
+        });
+        categoriesNameInput.addEventListener('change', function() {
+            // Создаем объект формы
+            var form = document.querySelector('form');
+            // Отправляем форму
+            form.submit();
+        });
+        nameMaterialInput.addEventListener('change', function() {
+            // Создаем объект формы
+            var form = document.querySelector('form');
+            // Отправляем форму
+            form.submit();
+        });
+    });
+</script>
+</body>
+</html>
+

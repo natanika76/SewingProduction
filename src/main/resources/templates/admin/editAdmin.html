@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+
+<div class="container">
+    <h2>Редактировать админа</h2>
+    <form th:action="@{/demigod/edit}" method="post">
+        <input type="hidden" th:field="${admin.id}"/>
+        <div class="mb-3">
+            <label for="name" class="form-label">ФИО</label>
+            <input type="text" class="form-control" id="name" name="name" th:field="${admin.name}" required/>
+        </div>
+        <div class="mb-3">
+            <label for="username" class="form-label">Логин</label>
+            <input type="text" class="form-control" id="username" name="username" th:field="${admin.username}" required/>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Пароль</label>
+            <input type="password" class="form-control" id="password" name="password" th:field="${admin.password}" />
+        </div>
+        <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+</div>
+
+</body>
+</html>

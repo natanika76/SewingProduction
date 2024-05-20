@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+
+<div class="container">
+    <h2>Редактирование задания</h2>
+
+    <form th:action="@{/admin/warehouseProcess/edit}" method="post" th:object="${warehouseData}">
+        <!-- Скрытое поле для передачи ID -->
+        <input type="hidden" id="warehouseId" name="id" th:value="${warehouseData.id}" />
+        <style>
+            .form-control {
+                max-width: 460px; /*установка максимальной ширины */
+            }
+        </style>
+        <!--заказчик-->
+        <div class="form-group mx-3">
+            <label for="customer">Заказчик:</label>
+            <input type="text" class="form-control" id="customer" th:value="${warehouseData.customer.getName()}" readonly/>
+        </div>
+        <!-- Выпадающий список для выбора и редактирования категории -->
+        <div class="form-group mx-3">
+            <label for="category">Категория:</label>
+            <select name="category" class="form-control" id="category" onchange="updateCategoryList()">
+            <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}" th:selected="${category.id eq warehouseData.category.id}"></option>
+            </select>
+        </div>
+        <!--материал-->
+        <div class="mx-3">
+            <label for= "nameMaterial" >Материал</label>
+            <input type="text" class="form-control" id="nameMaterial" name="nameMaterial" th:value="${warehouseData.nameMaterial}" required/>
+        </div>
+        <div class="mx-3">
+            <table>
+                <tr>
+                    <td style="padding-right: 20px;">
+                        <label for="unitsOfMeasurement" class="form-label">Единица измерения</label>
+                        <select class="form-control" id="unitsOfMeasurement" name="unitsOfMeasurement" th:field="*{unitsOfMeasurement}" required style="max-width: 300px;">
+                            <option value="" selected>Выберите единицу измерения</option>
+                            <option th:each="type : ${T(ru.vilas.sewing.dto.UnitsOfMeasurement).values()}" th:value="${type}" th:text="${type.russianName}"></option>
+                        </select>
+                    </td>
+                    <td>
+                        <label for="quantityOfMaterial" class="form-label">Количество</label>
+                        <input type="text" class="form-control" id="quantityOfMaterial" name="quantityOfMaterial" th:value="${warehouseData.quantityOfMaterial}" required style="max-width: 185px;"/>
+                    </td>
+                </tr>
+            </table>
+            <div>
+                <table>
+                    <tr>
+                        <td style="padding-right: 100px;">
+                            <label for="expenditure" class="form-label"> Расход</label>
+                            <input type="text" class="form-control" id="expenditure" name="expenditure" th:value="${warehouseData.expenditure}" required style="max-width: 150px;"/>
+                        </td>
+                        <td>
+                            <label for="numberOfProducts" class="form-label">Количество изделий</label>
+                            <input type="text" class="form-control" id="numberOfProducts" name="numberOfProducts" th:value="${warehouseData.numberOfProducts}" readonly style="max-width: 250px;"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <table>
+                    <tr>
+                        <td style="padding-right: 100px;">
+                            <label for="target" class="form-label">Задание</label>
+                            <input type="text" class="form-control" id="target" name="target" th:value="${warehouseData.target}" required style="max-width: 150px;"/>
+                        </td>
+                        <td>
+                            <label for="balance" class="form-label">Баланс</label>
+                            <input type="text" class="form-control" id="balance" name="balance" th:value="${warehouseData.balance}" readonly style="max-width: 250px;"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <h5>Задание на крой:</h5>
+                <table id="fieldsTable">
+                    <tr th:each="sizeByDate, iterStat : ${sizeByDates}">
+                        <td style="padding-right: 20px;">
+                            <!-- Label и input для размера -->
+                            <label th:for="'size_' + ${iterStat.index}" class="form-label">Размер</label>
+                            <input type="text" th:id="'size_' + ${iterStat.index}" th:name="'size[' + ${iterStat.index} + ']'" th:value="${sizeByDate.size}" class="form-control" required style="max-width: 100px;">
+                        </td>
+                        <td style="padding-right: 20px;">
+                            <!-- Label и input для роста -->
+                            <label th:for="'height_' + ${iterStat.index}" class="form-label">Рост</label>
+                            <input type="text" th:id="'height_' + ${iterStat.index}" th:name="'height[' + ${iterStat.index} + ']'" th:value="${sizeByDate.height}" class="form-control" required style="max-width: 100px;">
+                        </td>
+                        <td>
+                            <!-- Label и input для количества -->
+                            <label th:for="'quantity_' + ${iterStat.index}" class="form-label">Количество</label>
+                            <input type="text" th:id="'quantity_' + ${iterStat.index}" th:name="'quantity[' + ${iterStat.index} + ']'" th:value="${sizeByDate.quantity}" class="form-control" required style="max-width: 100px;">
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <p style="font-size: 14px;"> *Для удаления строки из "Задание на крой" введите 0 в поле "Количество"</p>
+            <div>
+                <table><tr>
+                        <td style="padding-right: 140px;">
+                            <label for="normPerDay" class="form-label">Норма в день</label>
+                            <input type="text" class="form-control" id="normPerDay" name="normPerDay" th:value="${warehouseData.normPerDay}" required style="max-width: 100px;"/>
+                        </td>
+                        <td>
+                            <label for="inTotal" class="form-label">Итого:</label>
+                            <input type="text" class="form-control" id="inTotal" name="inTotal" th:value="${warehouseData.inTotal}" readonly style="max-width: 100px;"/>
+                        </td>
+                        <td style="padding-right: 20px;"></td> <!-- Пустой элемент для создания промежутка-->
+
+                        <td>
+                            <label for="remains" class="form-label">Остаток:</label>
+                            <input type="text" class="form-control" id="remains" name="remains" th:value="${warehouseData.remains}" readonly style="max-width: 100px;"/>
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
+            <button type="button" id="addButton" onclick="addRow()" class="btn btn-primary mt-3">Добавить</button>
+        </div>
+        <div class="mx-3">
+            <tr>
+                <td>
+                    <label for="startWork" class="form-label">Начало работ:</label>
+                    <input type="date" class="form-control" id="startWork" name="startWork" th:value="${warehouseData.startWork}" required style="width: 150px;" readonly>
+                </td>
+                <td>
+                    <label for="endWork" class="form-label">Окончание работ:</label>
+                    <input type="date" class="form-control" id="endWork" name="endWork" th:value="${warehouseData.endWork}" required style="width: 150px;">
+                </td>
+            </tr>
+        </div>
+        <!-- Кнопка сохранения-->
+
+        <div  class="alert alert-danger" style="margin-top: 20px;" th:if="${error}" th:text="${error}" ></div>
+        <button type="submit" class="btn btn-primary mx-3" style=" margin-top: 20px;">Сохранить</button>
+
+        <!--блок для отображения сообщения об неудачном создании задания -->
+        <div th:if="${param.success}" class="alert alert-success" role="alert">
+            <p>Задание успешно изменено</p>
+        </div>
+
+        <div th:if="${param.error}" class="alert alert-danger" role="alert">
+            <p>Невозможно изменить задание, так как есть активное задание с таким заказчиком, категорией и материалом</p>
+        </div>
+
+    </form>
+</div>
+<script th:inline="javascript">
+
+    function addRow() {
+        // Получаем таблицу по ID
+        var table = document.getElementById("fieldsTable");
+
+        // Создаем новую строку tr
+        var row = table.insertRow();
+
+        // Получаем количество строк в таблице
+        var rowCount = table.rows.length;
+
+        // Создаем ячейки для новой строки
+        var sizeCell = row.insertCell(0);
+        var heightCell = row.insertCell(1);
+        var quantityCell = row.insertCell(2);
+
+        // Генерируем новые индексы
+        var newIndex = rowCount - 1;
+
+        // Добавляем HTML для новых полей с обновленными индексами
+        sizeCell.innerHTML = '<label class="form-label" for="size_' + newIndex + '">Размер</label>' +
+            '<input type="text" id="size_' + newIndex + '" name="size[' + newIndex + ']" class="form-control" required style="max-width: 100px;">';
+
+        heightCell.innerHTML = '<label class="form-label" for="height_' + newIndex + '">Рост</label>' +
+            '<input type="text" id="height_' + newIndex + '" name="height[' + newIndex + ']" class="form-control" required style="max-width: 100px;">';
+
+        quantityCell.innerHTML = '<label class="form-label" for="quantity_' + newIndex + '">Количество</label>' +
+            '<input type="text" id="quantity_' + newIndex + '" name="quantity[' + newIndex + ']" class="form-control" required style="max-width: 100px;">';
+    }
+
+
+    //  калькулятор полей и перевод отрицательных в красный цвет
+    document.getElementById("fieldsTable").addEventListener("input", function () {
+        var quantities = document.querySelectorAll("#fieldsTable input[name^='quantity']");
+        var total = 0;
+        for (var i = 0; i < quantities.length; i++) {
+            total += parseInt(quantities[i].value) || 0;
+        }
+        document.getElementById("inTotal").value = total;
+
+        var target = parseInt(document.getElementById("target").value) || 0;
+        var remains = target - total;
+        document.getElementById("remains").value = remains;
+
+        // Выделение остатка красным, если отрицательный
+        if (remains < 0) {
+            document.getElementById("remains").style.color = "red";
+        } else {
+            document.getElementById("remains").style.color = "black"; // Сброс цвета, если остаток положительный
+        }
+    });
+
+    // Функция для вычисления количества изделий и баланса
+    function calculateNumberOfProductsAndBalance() {
+        var quantityOfMaterial = parseFloat(document.getElementById("quantityOfMaterial").value);
+        var expenditure = parseFloat(document.getElementById("expenditure").value.replace(',', '.')); // Замена запятой на точку
+        var target = parseFloat(document.getElementById("target").value) || 0;
+        var total = parseInt(document.getElementById("inTotal").value) || 0;
+        if (!isNaN(quantityOfMaterial) && !isNaN(expenditure) && expenditure !== 0) {
+            var numberOfProducts = Math.floor(quantityOfMaterial / expenditure);
+            var balance = numberOfProducts - target;
+            var remains = target - total;
+
+            document.getElementById("remains").value = remains
+            document.getElementById("numberOfProducts").value = numberOfProducts;
+            document.getElementById("balance").value = balance;
+
+            // Выделение баланса красным, если отрицательный
+            if (balance < 0) {
+                document.getElementById("balance").style.color = "red";
+            } else {
+                document.getElementById("balance").style.color = "black"; // Сброс цвета, если баланс положительный
+            }
+        } else {
+            document.getElementById("numberOfProducts").value = ""; // Очистка поля, если одно из значений отсутствует или expenditure равно нулю
+            document.getElementById("balance").value = ""; // Очистка поля баланса
+        }
+    }
+
+    // Вызов функции при изменении значений полей
+    document.getElementById("quantityOfMaterial").addEventListener("input", calculateNumberOfProductsAndBalance);
+    document.getElementById("expenditure").addEventListener("input", calculateNumberOfProductsAndBalance);
+    document.getElementById("target").addEventListener("input", calculateNumberOfProductsAndBalance);
+
+
+    // Перевод отрицательных в красный цвет
+    document.addEventListener("DOMContentLoaded", function () {
+        var balanceInput = document.getElementById("balance");
+        var remainsInput = document.getElementById("remains");
+
+        // Проверяем значение поля balance
+        if (parseFloat(balanceInput.value) < 0) {
+            balanceInput.style.color = "red"; // Устанавливаем красный цвет текста
+        }
+    });
+
+    function updateRemainsColor() {
+        var remains = parseFloat(document.getElementById("remains").value);
+        if (remains < 0) {
+            document.getElementById("remains").style.color = "red";
+        } else {
+            document.getElementById("remains").style.color = "black";
+        }
+    }
+
+    document.getElementById("target").addEventListener("input", function () {
+        calculateNumberOfProductsAndBalance(); // Вычисление количества изделий и баланса
+        updateRemainsColor(); // Обновление цвета остатка при изменении поля target
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        var balanceInput = document.getElementById("balance");
+        var remainsInput = document.getElementById("remains");
+
+        // Проверяем значение поля balance
+        if (parseFloat(balanceInput.value) < 0) {
+            balanceInput.style.color = "red"; // Устанавливаем красный цвет текста
+        }
+
+        // Проверяем значение поля remains
+        if (parseFloat(remainsInput.value) < 0) {
+            remainsInput.style.color = "red"; // Устанавливаем красный цвет текста
+        }
+    });
+    //******************* Запрет ввода даты окончания на раньше.************
+    document.addEventListener('DOMContentLoaded', function () {
+        const endWorkInput = document.getElementById('endWork');
+        const initialDate = endWorkInput.value;
+
+        // Установить минимальную дату для поля ввода на основе текущего значения
+        endWorkInput.setAttribute('min', initialDate);
+
+        // Проверка даты при изменении значения
+        endWorkInput.addEventListener('input', function () {
+            if (endWorkInput.value < initialDate) {
+                endWorkInput.value = initialDate;
+            }
+        });
+    });
+
+</script>
+</body>
+</html>
+

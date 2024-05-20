@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+
+<div class="container">
+    <h2>Упаковка</h2>
+    <form  th:action="@{/categories/packagingTaskReport}" method="get" class="form-inline">
+        <h2 rowspan="3" class="fw-bold" th:text="${currentUserName}" th:value="${userId}"></h2>
+
+        <!-- Выпадающий список для выбора заказчика -->
+        <div class="form-group mx-2">
+            <label for="customer">Заказчик:</label>
+            <select id="customer" name="customer" class="form-select" onchange="updateCategoryList()">
+                <option value="0" th:selected="${selectedCustomerId eq 0}"></option>
+                <option value="" selected>Выберите заказчика</option>
+                <option th:each="customer : ${customers}" th:value="${customer.id}" th:text="${customer.name}" th:selected="${customer.id eq selectedCustomerId}"></option>
+                <input type="hidden" id="selectedCustomerId" name="selectedCustomerId" th:value="${selectedCustomerId}"/><!-- Скрытое поле для хранения выбранного заказчика -->
+            </select>
+        </div>
+        <!-- Выпадающий список для выбора категории -->
+        <div class="form-group mx-2">
+            <label for="category">Категория:</label>
+            <select id="category" name="category" class="form-select">
+                <option value="0" th:selected="${selectedCategoryId eq 0}"></option>
+                <option value="" selected>Выберите категорию</option>
+                <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}" th:data-customer-id="${category.customer.id}" th:selected="${category.id eq selectedCategoryId}"></option>
+                <input type="hidden" id="selectedCategoryId" name="selectedCategoryId" th:value="${selectedCategoryId}" /><!-- Скрытое поле для хранения выбранной категории -->
+            </select>
+        </div>
+
+        <!-- Выпадающий список для выбора материала-->
+        <div class="form-group mx-2">
+            <label for="nameMaterial">Материал:</label>
+            <select id="nameMaterial" name="nameMaterial" class="form-select">
+                <option value="0" th:selected="${selectedNameMaterial eq '0'}"></option>
+                <option value="" selected>Выберите материал</option>
+                <option th:each="material : ${nameMaterial}" th:value="${material}" th:text="${material}" th:selected="${material eq selectedNameMaterial}"></option>
+                <input type="hidden" id="selectedNameMaterial" name="selectedNameMaterial" th:value="${selectedNameMaterial}"/><!-- Скрытое поле для хранения выбранного материала -->
+            </select>
+        </div>
+        <input type="hidden" id="warehouse" name="warehouse" th:value="${warehouse}" />
+        <div class="form-group d-flex justify-content-end p-2">
+            <button type="submit" class="btn btn-primary">Ок</button>
+        </div>
+
+    </form>
+    <div style="margin-top: 10px;">
+        <a th:if="${warehouse}" th:href="@{/categories/packagingTaskReportData(warehouse=${warehouse})}" class="btn btn-primary">Ввести данные о выполнении</a>
+    </div>
+
+
+   <!-- <form id="packagingForm" th:action="@{/categories/packagingTaskReport}" method="post" th:object="${warehouse}">
+
+        <h5>Задание на упаковку:</h5>
+
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Размер:</th>
+                <th>Рост:</th>
+                <th>Кол-во</th>
+                <th></th>
+                <th>Выполнение:</th>
+                <th>Остаток:</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="sizByDate, iterStat : ${sizeByDateDto}">
+                <td th:text="${sizByDate.size}"></td>
+                <td th:text="${sizByDate.height}"></td>
+                <td th:text="${sizByDate.quantity}"></td>
+                <td style="text-align: right;">Кол-во:</td>
+                <td>   -->
+                   <!-- <input type="text" class="form-control userInput"  data-id="${sizByDate.getSizeByDateId}" name="userInput" style="max-width: 100px;" />
+                    <input type="number" class="form-control userInput" data-id="${sizByDate.getSizeByDateId}" name="userInput" style="max-width: 100px;" min="0" />
+                </td>
+                <td><span th:text="${remains}" id="difference"></span></td>
+            </tr>
+            <tr style="font-weight: bold;" th:each="warehouse : ${warehouseDto}">
+                <td></td>
+                <th style="text-align: right;">Итого:</th>
+                <td th:text="${totalPackaging}" id="inTotal"></td>
+                <td></td>
+                <td th:text="${done}" id="done" name="done" th:value="${done}"></td>
+                <td th:text="${balance}" id="balance"></td>
+
+            </tr>
+        </tbody>
+        </table>
+
+        <h5 class="fw-bold">
+            <span style="margin-right: 20px;" th:text="${warehouseDto != null ? 'Норма в день: ' + warehouseDto.normPerDay : ''}"></span>
+        </h5>
+
+        <input type="hidden" id="selectedDatePost" name="date" th:value="${date}" />
+        <input type="hidden" id="userId" name="userId" th:value="${userId}" />
+        <input type="hidden" id="warehouse" name="warehouse" th:value="${warehouse}" />
+        <th:block th:each="dto : ${sizeByDateDto}">
+            <input type="hidden" th:value="${dto.sizeByDateId}" name="sizeByDateIds" />
+        </th:block>
+
+        <button type="submit" class="btn btn-primary">Сохранить</button>-->
+
+        <!-- блок для отображения сообщения об успешном сохранении
+        <div th:if="${message}" class="alert alert-success" role="alert">
+            <p th:text="${message}"></p>
+        </div>
+    </form>-->
+</div>
+
+<script th:inline="javascript">
+    // Отправляем дату сразу после выбора
+    document.addEventListener('DOMContentLoaded', function() {
+
+        var customersNameInput = document.getElementById('customer');
+        var categoriesNameInput = document.getElementById('category');
+        customersNameInput.addEventListener('change', function() {
+            // Создаем объект формы
+            var form = document.querySelector('form');
+            // Отправляем форму
+            form.submit();
+        });
+        categoriesNameInput.addEventListener('change', function() {
+            // Создаем объект формы
+            var form = document.querySelector('form');
+            // Отправляем форму
+            form.submit();
+        });
+
+    });
+
+
+
+
+    //********************** запрет на сохранение с незаполненными полями ***********
+     document.addEventListener('DOMContentLoaded', function() {
+        var form = document.getElementById('packagingForm');
+        form.addEventListener('submit', function(event) {
+            var userInputFields = document.querySelectorAll('.userInput');
+            for (var i = 0; i < userInputFields.length; i++) {
+                if (userInputFields[i].value === '') {
+                    event.preventDefault(); // Предотвращаем отправку формы
+                    alert('Пожалуйста, заполните все поля');
+                    return;
+                }
+            }
+        });
+    });
+    //**************************
+    //Перегрузка страницы по клику в любом месте
+    //убрать поле по клику
+    document.addEventListener("DOMContentLoaded", function() {
+        var alert = document.querySelector(".alert");
+
+        if (alert) {
+            // Добавляем обработчик события клика для всего документа
+            document.addEventListener("click", function(event) {
+                // Проверяем, был ли клик выполнен вне элемента с классом .alert
+                if (!alert.contains(event.target)) {
+                    // Если клик выполнен вне окна алерта, скрываем его и перезагружаем форму
+                    alert.style.display = "none";
+
+                    // Перезагрузка формы
+                    var form = document.querySelector('form');
+                    form.submit();
+                }
+            });
+
+            // Добавляем обработчик для кнопок закрытия алерта
+            var alertCloseButtons = alert.querySelectorAll("button.close");
+
+            alertCloseButtons.forEach(function(button) {
+                button.addEventListener("click", function() {
+                    var alert = this.parentElement;
+                    alert.style.display = "none";
+                });
+            });
+        }
+    });
+
+    //*********************
+    document.addEventListener("DOMContentLoaded", function() {
+        // Находим все элементы с классом "userInput"
+        var userInputElements = document.querySelectorAll(".userInput");
+        var differenceElements = document.querySelectorAll("#difference");
+
+        // Функция для обновления суммы, остатка и баланса
+        function updateSumAndBalance() {
+            var sum = 0;
+
+            userInputElements.forEach(function(inputElement, index) {
+                var quantity = parseInt(inputElement.closest("tr").querySelector("td:nth-child(3)").textContent);
+                var value = parseInt(inputElement.value) || 0;
+                var differenceElement = differenceElements[index];
+                var done = 0;
+
+                if (isNaN(quantity)) {
+                    console.error("Ошибка: Некорректное значение количества.");
+                    return;
+                }
+
+                if (isNaN(value)) {
+                    console.error("Ошибка: Некорректное введенное значение.");
+                    return;
+                }
+                // Обновляем значение остатка в текущей строке
+                var difference = quantity - value;
+                if (difference < 0) {
+                    difference = 0; // Если разница отрицательная, устанавливаем ее в 0
+                }
+                differenceElement.textContent = difference;
+
+
+                // Суммируем значения введенных данных
+                sum += value;
+            });
+
+            // Устанавливаем сумму в поле "выполнено"
+            var doneElement = document.getElementById("done");
+            if (doneElement) {
+                doneElement.textContent = sum;
+            }
+
+            // Обновляем баланс
+            updateBalance();
+        }
+
+        // Функция для обновления баланса
+        function updateBalance() {
+            var inTotalElement = document.getElementById("inTotal");
+            var balanceElement = document.getElementById("balance");
+
+            if (!inTotalElement || !balanceElement) {
+                console.error("Ошибка: Не найдены элементы для обновления баланса.");
+                return;
+            }
+
+            var inTotal = parseInt(inTotalElement.textContent) || 0;
+            var done = parseInt(document.getElementById("done").textContent) || 0;
+
+            // Вычисляем баланс
+            var balance = inTotal - done;
+            balanceElement.textContent = balance >= 0 ? balance : 0;
+        }
+
+        // Добавляем обработчик события input для каждого поля ввода
+        userInputElements.forEach(function(inputElement) {
+            inputElement.addEventListener("input", updateSumAndBalance);
+        });
+
+        // Вызываем функцию для инициализации суммы и баланса при загрузке страницы
+        updateSumAndBalance();
+    });
+    //****************** Запрет ввода отрицательных чисел и букв *****************
+    document.addEventListener("DOMContentLoaded", function() {
+        // Находим все элементы с классом "userInput"
+        var userInputElements = document.querySelectorAll(".userInput");
+
+        // Для каждого такого элемента добавляем обработчик события input
+        userInputElements.forEach(function(element) {
+            element.addEventListener("input", function() {
+                // Получаем максимальное значение из соответствующей ячейки td
+                var maxValue = parseInt(this.parentNode.previousElementSibling.previousElementSibling.innerText.trim()) || 0;
+
+                // Получаем введенное значение и преобразуем его в число
+                var enteredValue = parseInt(this.value.trim()) || 0;
+
+                // Если введенное значение больше максимального или меньше 0, делаем его равным максимальному
+                if (enteredValue < 0 || isNaN(enteredValue)) {
+                    this.value = 0;
+                } else if (enteredValue > maxValue) {
+                    this.value = maxValue;
+                }
+            });
+        });
+    });
+
+</script>
+</body>
+</html>
+

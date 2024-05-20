@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+
+<div class="container">
+  <h2>Создать новое задание</h2>
+  <form th:action="@{/admin/warehouseProcess/new}" method="post" th:object="${warehouseData}" onsubmit="return markChangesBeforeSubmit();">
+
+      <style>
+          .form-control {
+              max-width: 460px; /*установка максимальной ширины */
+          }
+      </style>
+
+     <!--Выпадающий список для выбора заказчика-->
+      <div class="form-group mx-3">
+          <label for="customer">Заказчик:</label>
+          <select id="customer" name="customer" class="form-control" onchange="updateCategoryList()">
+          <option value="0" th:selected="${selectedCustomerId eq 0}">Выберите заказчика</option>
+          <option th:each="customer : ${customers}" th:value="${customer.id}" th:text="${customer.name}" th:selected="${customer.id eq selectedCustomerId}"></option>
+          </select>
+      </div>
+                <!-- Выпадающий список для выбора категории-->
+<div class="form-group mx-3">
+    <label for="category">Категория:</label>
+    <select id="category" name="category" class="form-control">
+    <option value="0" th:selected="${selectedCategoryId eq 0}">Все категории</option>
+    <option value="" selected>Выберите категорию</option>
+    <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}" th:data-customer-id="${category.customer.id}" th:selected="${category.id eq selectedCategoryId}"></option>
+    </select>
+</div>
+                              <!--ввод материала-->
+<div class="mx-3">
+<label for= "nameMaterial" class="form-label">Введите наименование материала</label>
+<input type="text" class="form-control" id="nameMaterial" name="nameMaterial" th:value="${warehouseData.nameMaterial}" required/>
+</div>
+<div class="mx-3">
+<table>
+<tr>
+<td style="padding-right: 20px;">
+  <label for="unitsOfMeasurement" class="form-label">Единица измерения</label>
+  <select class="form-control" id="unitsOfMeasurement" name="unitsOfMeasurement" th:field="*{unitsOfMeasurement}" required style="max-width: 300px;">
+      <option value="" selected>Выберите единицу измерения</option>
+      <option th:each="type : ${T(ru.vilas.sewing.dto.UnitsOfMeasurement).values()}" th:value="${type}" th:text="${type.russianName}"></option>
+  </select>
+</td>
+<td>
+  <label for="quantityOfMaterial" class="form-label">Введите количество</label>
+  <input type="number" class="form-control userInput" id="quantityOfMaterial" name="quantityOfMaterial" th:value="${warehouseDto.quantityOfMaterial}" required style="max-width: 185px;" min="0" max="99999999"/>
+</td>
+</tr>
+
+</table>
+<div>
+<table>
+<tr>
+<td style="padding-right: 100px;">
+  <label for="expenditure" class="form-label">Введите расход</label>
+  <input type="number" class="form-control userInput" id="expenditure" name="expenditure" th:value="${warehouseDto.expenditure}" required style="max-width: 150px;" min="0" max="99999999"/>
+</td>
+<td>
+  <label for="numberOfProducts" class="form-label">Количество изделий</label>
+  <input type="text" class="form-control" id="numberOfProducts" name="numberOfProducts" th:value="${warehouseDto.numberOfProducts}" readonly style="max-width: 250px;"/>
+</td>
+</tr>
+</table>
+</div>
+<div>
+<table>
+<tr>
+<td style="padding-right: 100px;">
+  <label for="target" class="form-label">Задание</label>
+  <input type="number" class="form-control userInput" id="target" name="target" th:value="${warehouseDto.target}" required style="max-width: 150px;" min="0" max="99999999"/>
+</td>
+<td>
+  <label for="balance" class="form-label">Баланс</label>
+  <input type="text" class="form-control" id="balance" name="balance" th:value="${warehouseDto.balance}" readonly style="max-width: 250px;"/>
+
+</td>
+</tr>
+</table>
+</div>
+    <div>
+        <h5>Задание на крой:</h5>
+        <table id="fieldsTable">
+            <tr>
+                <td style="padding-right: 20px;">
+                    <label for="size" class="form-label">Размер</label>
+                    <input type="text" class="form-control" id="size" name="size"  required style="max-width: 100px;">
+                </td>
+                <td style="padding-right: 20px;">
+                    <label for="height" class="form-label">Рост</label>
+                    <input type="text" class="form-control" id="height" name="height" required style="max-width: 100px;">
+                </td>
+                <td>
+                    <label for="quantity" class="form-label">Количество</label>
+                    <input type="number" class="form-control userInput" id="quantity" name="quantity" required style="max-width: 100px;" min="0" max="99999999">
+                </td>
+            </tr>
+        </table>
+    </div>
+
+  <div>
+      <table>
+          <tr>
+              <td style="padding-right: 140px;">
+                  <label for="normPerDay" class="form-label">Норма в день</label>
+                  <input type="number" class="form-control userInput" id="normPerDay" name="normPerDay" th:value="${warehouseDto.normPerDay}" required style="max-width: 100px;" min="0" max="99999999"/>
+              </td>
+              <td>
+                  <label for="inTotal" class="form-label">Итого:</label>
+                  <input type="text" class="form-control" id="inTotal" name="inTotal" th:value="${warehouseDto.inTotal}" readonly style="max-width: 100px;"/>
+              </td>
+              <td style="padding-right: 20px;"></td> <!--Пустой элемент для создания промежутка-->
+
+              <td>
+                  <label for="remains" class="form-label">Остаток:</label>
+                  <input type="text" class="form-control" id="remains" name="remains" th:value="${warehouseDto.remains}" readonly style="max-width: 100px;"/>
+              </td>
+          </tr>
+      </table>
+  </div>
+
+ <button type="button" id="addButton" onclick="getElementById()" class="btn btn-primary mt-3">Добавить</button>
+  </div>
+ <div class="mx-3">
+ <tr>
+     <td>
+         <label for="startWork" class="form-label">Начало работ:</label>
+         <input type="date" class="form-control" id="startWork" name="startWork" th:value="${warehouseDto.startWork}" required style="width: 150px;" >
+     </td>
+     <td>
+         <label for="endWork" class="form-label">Окончание работ:</label>
+         <input type="date" class="form-control" id="endWork" name="endWork" th:value="${warehouseDto.endWork}" required style="width: 150px;">
+     </td>
+ </tr>
+ </div>
+               <!-- Кнопка для отправки формы -->
+          <div class = "mx-3">
+                 <button style="margin-top: 20px"  type="submit" class="btn btn-primary">Создать задание</button>
+
+              <!--блок для отображения сообщения об неудачном создании задания -->
+      <div th:if="${param.success}" class="alert alert-success" role="alert">
+          <p>Задание успешно создано</p>
+      </div>
+
+      <div th:if="${param.error}" class="alert alert-danger" role="alert">
+          <p>Невозможно добавить новое задание, так как есть активное задание с таким заказчиком, категорией и материалом</p>
+      </div>
+        </div>
+    </form>
+    </div>
+
+<script th:inline="javascript">
+    //убрать поле по клику
+    document.addEventListener("DOMContentLoaded", function() {
+        var alert = document.querySelector(".alert");
+        if (alert) {
+            // Добавляем обработчик события клика для всего документа
+            document.addEventListener("click", function(event) {
+                // Проверяем, был ли клик выполнен вне элемента с классом .alert
+                if (!alert.contains(event.target)) {
+                    // Если клик выполнен вне окна алерта, скрываем его
+                    alert.style.display = "none";
+                }
+            });
+        }
+    });
+    document.addEventListener("DOMContentLoaded", function() {
+        var alertCloseButtons = document.querySelectorAll(".alert button.close");
+
+        alertCloseButtons.forEach(function(button) {
+            button.addEventListener("click", function() {
+                var alert = this.parentElement;
+                alert.style.display = "none";
+            });
+        });
+
+        document.addEventListener("click", function(event) {
+            var alert = event.target.closest(".alert");
+            if (alert) {
+                alert.style.display = "none";
+            }
+        });
+    });
+//*******************
+
+
+    //Скрипт для динамического считывания данных
+    var index = 1; // начальное значение индекса
+    document.getElementById("addButton").addEventListener("click", function() {
+        var fieldsTable = document.getElementById("fieldsTable");
+        var newRow = document.createElement("tr");
+        var sizeCell = document.createElement("td");
+        sizeCell.style.paddingRight = "20px";
+        sizeCell.innerHTML = '<label for="size[' + index + ']" class="form-label">Размер</label><input type="text" class="form-control height" name="size[' + index + ']" required style="max-width: 100px;">';
+        newRow.appendChild(sizeCell);
+        var heightCell = document.createElement("td");
+        heightCell.style.paddingRight = "20px";
+        heightCell.innerHTML = '<label for="height['+ index + ']" class="form-label">Рост</label><input type="text" class="form-control height" name="height[' + index + ']" required style="max-width: 100px;">';
+        newRow.appendChild(heightCell);
+
+        var quantityCell = document.createElement("td");
+        quantityCell.innerHTML = '<label for="quantity[' + index + ']" class="form-label">Количество</label><input type="text" class="form-control quantity" name="quantity[' + index + ']" required style="max-width: 100px;">';
+        newRow.appendChild(quantityCell);
+        fieldsTable.appendChild(newRow);
+        let input = document.createElement("input");
+        input.type = "text";
+        input.name = "quantity[" + index + "]";   // это имя должно совпадать с именем поля в Дто
+        input.setAttribute("name", "quantity[" + index + "]");
+        input.name = "size[" + index + "]";
+        input.setAttribute("name", "size[" + index + "]");
+        input.name = "height[" + index + "]";
+        input.setAttribute("name", "height[" + index + "]");
+
+        index++;    // увеличиваем индекс для следующего добавленного ряда
+
+
+
+    });
+
+    /* ]]> */
+    document.getElementById("fieldsTable").addEventListener("input", function() {
+        var quantities = document.querySelectorAll("#fieldsTable input[name^='quantity']");
+        var total = 0;
+        for (var i = 0; i < quantities.length; i++) {
+            total += parseInt(quantities[i].value) || 0;
+        }
+        document.getElementById("inTotal").value = total;
+
+        var target = parseInt(document.getElementById("target").value) || 0;
+        var remains = target - total;
+        document.getElementById("remains").value = remains;
+
+        // Выделение остатка красным, если отрицательный
+        if (remains < 0) {
+            document.getElementById("remains").style.color = "red";
+        } else {
+            document.getElementById("remains").style.color = "black"; // Сброс цвета, если остаток положительный
+        }
+    });
+
+    /* ]]> */
+
+    // Функция для вычисления количества изделий и баланса
+    function calculateNumberOfProductsAndBalance() {
+        var quantityOfMaterial = parseFloat(document.getElementById("quantityOfMaterial").value);
+        var expenditure = parseFloat(document.getElementById("expenditure").value.replace(',', '.')); // Замена запятой на точку
+        var target = parseFloat(document.getElementById("target").value);
+
+        // Проверка наличия значений и проверка деления на ноль
+        if (!isNaN(quantityOfMaterial) && !isNaN(expenditure) && expenditure !== 0) {
+            var numberOfProducts = Math.floor(quantityOfMaterial / expenditure);
+            var balance = numberOfProducts - target;
+            document.getElementById("numberOfProducts").value = numberOfProducts;
+            document.getElementById("balance").value = balance;
+
+            // Выделение баланса красным, если отрицательный
+            if (balance < 0) {
+                document.getElementById("balance").style.color = "red";
+            } else {
+                document.getElementById("balance").style.color = "black"; // Сброс цвета, если баланс положительный
+            }
+        } else {
+            document.getElementById("numberOfProducts").value = ""; // Очистка поля, если одно из значений отсутствует или expenditure равно нулю
+            document.getElementById("balance").value = ""; // Очистка поля баланса
+        }
+    }
+
+    // Вызов функции при изменении значений полей
+    document.getElementById("quantityOfMaterial").addEventListener("input", calculateNumberOfProductsAndBalance);
+    document.getElementById("expenditure").addEventListener("input", calculateNumberOfProductsAndBalance);
+    document.getElementById("target").addEventListener("input", calculateNumberOfProductsAndBalance);
+
+    /* ]]> */
+    var originalCategories = []; // Список для сохранения всех категорий
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var categorySelect = document.getElementById('category');
+        originalCategories = Array.from(categorySelect.options); // Сохраняем все категории при загрузке страницы
+        var customerSelect = document.getElementById('customer');
+        updateCategoryList();
+        customerSelect.addEventListener('change', updateCategoryList);
+    });
+
+    function updateCategoryList() {
+        var customerSelect = document.getElementById('customer');
+        var categorySelect = document.getElementById('category');
+        var selectedCustomerId = customerSelect.value;
+
+           // Очищаем список категорий
+        categorySelect.innerHTML = '<option value="0">Все категории</option>';
+
+        // Фильтруем категории в зависимости от выбранного заказчика
+        originalCategories.forEach(function(categoryOption) {
+            if (categoryOption.getAttribute('data-customer-id') === selectedCustomerId || selectedCustomerId === '0') {
+                categorySelect.appendChild(categoryOption.cloneNode(true));
+            }
+        });
+    }
+
+    //********************** Запрет ввода отрицательных чисел и букв *******************
+    document.addEventListener("DOMContentLoaded", function() {
+        // Находим все поля ввода, где нужно запретить отрицательные числа и буквы
+        var userInputElements = document.querySelectorAll(".userInput");
+
+        // Для каждого такого элемента добавляем обработчик события input
+        userInputElements.forEach(function(element) {
+            element.addEventListener("input", function() {
+                // Получаем введенное значение и преобразуем его в число
+                var enteredValue = parseInt(this.value.trim()) || 0;
+                var maxValue = parseInt(this.getAttribute("max")) || 0;
+
+                // Если введенное значение меньше 0 или не является числом, делаем его равным 0
+                if (enteredValue < 0 || isNaN(enteredValue)) {
+                    this.value = 0;
+                }
+                // Если введенное значение больше максимального, делаем его равным максимальному
+                else if (enteredValue > maxValue) {
+                    this.value = maxValue;
+                }
+            });
+        });
+    });
+</script>
+</body>
+

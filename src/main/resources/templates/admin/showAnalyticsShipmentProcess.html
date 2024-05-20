@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+
+<div class="container">
+    <h2>Аналитика</h2>
+    <form th:action="@{/admin/shipmentProcess/show/{id} (id = ${warehouseDto.id})}" method="get"  class="form-inline"th:object="${warehouseDto}" >
+        <h5 class="fw-bold">
+            <span style="margin-right: 20px;" th:text="'Заказчик: ' + ${customersName}"></span>
+            <span style="margin-right: 20px;" th:text="'Категория: ' + ${categoryName}"></span>
+            <span style="margin-right: 20px;" th:text="'Материал: ' + ${materialName}"></span>
+        </h5>
+
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Размер:</th>
+                <th>Рост:</th>
+                <th>Задание:</th>
+                <th>Упаковано:</th>
+                <th>Отгружено:</th>
+                <th>Остаток на складе:</th>
+                <th>Остаток к отгрузке:</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="analytics : ${analyticsDtos}">
+                <td th:text="${analytics.size}"></td>
+                <td th:text="${analytics.height}"></td>
+                <td th:text="${analytics.quantity}"></td>
+                <td th:text="${analytics.packaging}"></td>
+                <td th:text="${analytics.shipment}"></td>
+                <td th:text="${analytics.remainsWarehouse}"></td>
+                <td th:text="${analytics.remainsShipment}"></td>
+            </tr>
+            <tr>
+                <th></th>
+                <th>Итого:</th>
+                <th th:text="${totalAnalyticsDto.totalQuantity}"></th>
+                <th th:text="${totalAnalyticsDto.totalPackaging}"></th>
+                <th th:text="${totalAnalyticsDto.totalShipment}"></th>
+                <th th:text="${totalAnalyticsDto.totalRemainsWarehouse}"></th>
+                <th th:text="${totalAnalyticsDto.totalRemainsShipment}"></th>
+            </tr>
+            </tbody>
+        </table>
+        <a th:href="@{'/admin/shipmentProcess/chart/'+ ${warehouseDto.id}}"class="btn btn-warning btn-sm"> Открыть графики задач </a>
+
+        <h5 th:text="'Заказ в работе, дней ' + ${workingPeriodCurrentDate} + ' из ' + ${workingPeriod}"></h5>
+        <div class="progress-container">
+            <div class="progress" style="height: 20px;">
+                <div class="progress-bar bg-success" role="progressbar"
+                     th:style="'width: ' + (${workingPeriodCurrentDate} * 100 / ${workingPeriod}) + '%'"
+                     th:aria-valuenow="${workingPeriodCurrentDate * 100 / workingPeriod}"
+                     aria-valuemin="0" aria-valuemax="100">
+                </div>
+            </div>
+        </div>
+
+        <br/><br/>
+
+        <div style="display: flex;">
+            <h5 class="fw-bold" style="margin-right: 30px;">
+                Прогноз отгрузки на конечную дату:
+                <span>
+            <span th:text="${shipmentForecast}" th:class="${shipmentForecast < totalAnalyticsDto.totalQuantity * 0.9 ? 'text-danger' : ''}"></span>
+        </span>
+                из <span th:text="${totalAnalyticsDto.totalQuantity}"></span>
+            </h5>
+            <h5 class="fw-bold">
+                Прогноз выполнения заказа, дней:
+                <span>
+            <span th:text="${forecastDays}" th:class="${forecastDays > workingPeriod * 0.9 ? 'text-danger' : ''}"></span>
+        </span>
+                из <span th:text="${workingPeriod}"></span>
+            </h5>
+        </div>
+        <h5 class="fw-bold">
+            Рекомендуется установить норму отгрузки в день:
+            <span th:text="${recommendedShipmentRatePerDay}"></span>
+        </h5>
+        <div style="display: flex; flex-direction: column;">
+            <!-- Верхняя строка с полями для ввода данных -->
+            <div style="display: flex; margin-bottom: 10px;">
+                <input type="text" class="form-control" id="input1" placeholder="Введите норму отгрузки">
+                <input type="text" class="form-control" id="input2" placeholder="Введите период отгрузки, дней">
+            </div>
+                           <h5 class="fw-bold" id="forecastSection" style="display: none;">
+                    Прогноз отгрузки на конечную дату:
+                    <span id="result1"></span>
+                    из <span id="totalQuantity" th:text="${totalAnalyticsDto.totalQuantity}"></span>
+                    <span style="margin-right: 20px;"></span>
+                    Прогноз выполнения заказа, дней:
+                    <span id="result2"></span>
+                    из <span id="workingPeriod" th:text="${workingPeriod}"></span>
+                </h5>
+
+            <input type="hidden" id="workingPeriodCurrentDate" name="workingPeriodCurrentDate" th:value="${workingPeriodCurrentDate}" />
+            <input type="hidden" id="normPerDay" name="normPerDay" th:value="${warehouseDto.normPerDay}">
+        </div>
+
+        <style>
+            #myChart {
+                width: 100%; /* Ширина в 100% ширины родительского контейнера */
+                height: 50vh; /* Высота в 100% высоты видимой области страницы */
+            }
+        </style>
+
+        <div id="myChart" ></div>
+
+
+    </form>
+</div>
+<script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+        var input1 = document.getElementById("input1");
+        var input2 = document.getElementById("input2");
+        var forecastSection = document.getElementById("forecastSection");
+
+        input1.addEventListener("input", toggleForecastSection);
+        input2.addEventListener("input", toggleForecastSection);
+
+        function toggleForecastSection() {
+            if (input1.value && input2.value) {
+                forecastSection.style.display = "block";
+            } else {
+                forecastSection.style.display = "none";
+            }
+        }
+    });
+    //****************
+    var chartData = /*[[${chartShowAnalytics}]]*/[];
+    // Создаем массивы для дат и данных
+    var dates = [];
+    var quantities = [];
+    // Заполняем массивы данными из chartData
+    chartData.forEach(function(dto) {
+        dates.push(dto.date)
+        quantities.push(dto.quantity);
+    });
+
+    // Сортируем массив дат по возрастанию
+    dates.sort(function(a, b) {
+        return new Date(a) - new Date(b);
+    });
+
+    var myChart = echarts.init(document.getElementById('myChart'));
+    // Получаем значение поля "Норма в день"
+    var normPerDayValue = document.getElementById("normPerDay").value;
+    // Настраиваем опции графика
+    var options = {
+        xAxis: {
+            name: 'Даты',
+            type: 'category',
+            data: dates,
+            axisLabel: {
+                rotate: 90, // Устанавливаем угол поворота текста в градусах (90 градусов для вертикального направления)
+                formatter: function(value, index) {
+                    // value - значение даты, index - индекс элемента
+                    // Преобразуем строку даты в объект Date
+                    var date = new Date(value);
+                    // Форматируем дату в нужный формат: число.месяц
+                    var formattedDate = (date.getDate() < 10 ? '0' : '') + date.getDate() + '.' + ((date.getMonth() + 1) < 10 ? '0' : '') + (date.getMonth() + 1);
+                    return formattedDate;
+                }
+            },
+            axisLine: {
+                symbol: ['none', 'arrow'], // Добавляем стрелку к оси X
+                symbolSize: [8, 20], // Размер стрелки
+                lineStyle: {
+                    color: 'black' // Цвет линии оси
+                }
+            }
+        },
+        yAxis: [
+            {
+                name: 'Отгружено',
+                type: 'value',
+                axisLine: {
+                    show: true,
+                    symbol: ['none', 'arrow'], // Добавляем стрелки к оси Y
+                    symbolSize: [8, 20], // Размер стрелок
+                    lineStyle: {
+                        color: 'black'
+                    }
+                },
+                axisLabel: {
+                    formatter: '{value}'
+                },
+                axisPointer: {
+                    show: false
+                },
+                splitLine: { show: true }, // Отключаем линии сетки, если не нужны
+                splitArea: { show: true }, // Отключаем заливку сетки, если не нужна
+                axisTick: { show: true }, // Отключаем метки на оси, если не нужны
+            }
+        ],
+        series: [
+            {
+                data: quantities, // Передаем массив данных для столбцов
+                type: 'bar',
+                showBackground: true,
+                backgroundStyle: {
+                    color: 'rgba(220, 220, 220, 0.8)'
+                },
+                // Устанавливаем ширину столбцов
+                barWidth: '40%', // Например, 40% от ширины категории
+                barCategoryGap: '20%', // Например, 20% от ширины категории
+                label: { // Добавляем параметр label для отображения числовых значений
+                    show: true, // Показываем метку
+                    position: 'top', // Позиция метки над столбцом
+                    color: 'black', // Цвет текста метки
+                    formatter: '{c}', // Формат числового значения
+                },
+            },
+     {
+                name: 'Норма', // Название серии данных
+                type: 'line', // Тип графика (линейный)
+                yAxisIndex: 0, // Индекс оси, которая будет использоваться для этой серии данных
+                symbol: 'none', // Убираем маркеры точек
+                data: [normPerDayValue], // Задаем только одну точку для начала линии
+                markLine: {
+                    data: [
+                        { yAxis: normPerDayValue, lineStyle: { color: 'red', type: 'dashed' } } // Добавляем горизонтальную линию
+                    ]
+                }
+            }
+        ]
+    };
+    // Создаем экземпляр графика с помощью ECharts
+    var myChart = echarts.init(document.getElementById('myChart'));
+
+    // Устанавливаем опции для графика
+    myChart.setOption(options);
+    //**********  + workingPeriodCurrentDate
+    document.addEventListener("DOMContentLoaded", function() {
+        // Функция для обновления результатов
+        function updateResults() {
+            var input1 = parseFloat(document.getElementById("input1").value);
+            var input2 = parseFloat(document.getElementById("input2").value);
+            var totalQuantity = parseFloat(document.getElementById("totalQuantity").innerText);
+            var workingPeriod = parseFloat(document.getElementById("workingPeriod").innerText);
+            var workingPeriodCurrentDate = parseFloat(document.getElementById("workingPeriodCurrentDate").value);
+
+            // Проверка на корректность ввода
+            if (!isNaN(input1) && !isNaN(input2) && input2 !== 0 && !isNaN(totalQuantity) && !isNaN(workingPeriod)) {
+                // Расчеты
+                var totalShipment = /*[[${totalAnalyticsDto.totalShipment}]]*/0;
+                var result1 = Math.round((input1 / input2) * (workingPeriod - workingPeriodCurrentDate) + totalShipment);
+                var result2 = Math.round(totalQuantity / (input1 / input2) + workingPeriodCurrentDate);
+
+                // Обновление результатов на странице
+                document.getElementById("result1").innerText = result1;
+                document.getElementById("result2").innerText = result2;
+
+                // Показываем блок с прогнозом после ввода данных
+                document.getElementById("forecastSection").style.display = "block";
+            } else {
+                // Если данные введены некорректно, выводим сообщение об ошибке
+                document.getElementById("result1").innerText = "Ошибка ввода";
+                document.getElementById("result2").innerText = "Ошибка ввода";
+
+                // Скрываем блок с прогнозом, если данные некорректны
+                document.getElementById("forecastSection").style.display = "none";
+            }
+        }
+
+        // Вызываем функцию updateResults() при изменении полей ввода
+        document.getElementById("input1").addEventListener("input", updateResults);
+        document.getElementById("input2").addEventListener("input", updateResults);
+
+        // Вызываем updateResults() для первоначального расчета
+        updateResults();
+    });
+</script>
+</body>
+</html>

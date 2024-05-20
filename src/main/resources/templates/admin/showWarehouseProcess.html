@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+
+<div class="container">
+    <h2 style="margin-bottom: 30px">Задание</h2>
+
+    <form th:action="@{/admin/warehouseProcess/edit/{id} (id = ${warehouseData.id})}" method="get" th:object="${warehouseData}">
+        <style>
+            .form-control {
+                max-width: 460px; /*установка максимальной ширины */
+            }
+        </style>
+        <!-- заказчик-->
+        <div class="form-group mx-3">
+            <label for="customer">Заказчик:</label>
+            <input type="text" class="form-control" id="customer" name="customer" th:value="${warehouseData.customer.getName()}" readonly/>
+        </div>
+        <!-- категория-->
+        <div class="form-group mx-3">
+            <label for="category">Категория:</label>
+            <input type="text" class="form-control" id="category" name="category" th:value="${warehouseData.category.getName()}" readonly/>
+        </div>
+        <!--материал-->
+        <div class="mx-3">
+            <label for= "nameMaterial" >Материал</label>
+            <input type="text" class="form-control" id="nameMaterial" name="nameMaterial" th:value="${warehouseData.nameMaterial}" readonly/>
+        </div>
+        <div class="mx-3">
+            <table>
+                <tr>
+                    <td style="padding-right: 20px;">
+                        <label for="unitsOfMeasurement" >Единица измерения</label>
+                        <input type="text" class="form-control" id="unitsOfMeasurement" name="unitsOfMeasurement" th:value="${warehouseData.unitsOfMeasurement.getRussianName()}" readonly/>
+                    </td>
+                    <td>
+                        <label for="quantityOfMaterial" class="form-label">Количество</label>
+                        <input type="text" class="form-control" id="quantityOfMaterial" name="quantityOfMaterial" th:value="${warehouseData.quantityOfMaterial}" readonly style="max-width: 185px;"/>
+                    </td>
+                </tr>
+
+            </table>
+            <div>
+                <table>
+                    <tr>
+                        <td style="padding-right: 100px;">
+                            <label for="expenditure" class="form-label">Расход</label>
+                            <input type="text" class="form-control" id="expenditure" name="expenditure" th:value="${warehouseData.expenditure}" readonly style="max-width: 150px;"/>
+                        </td>
+                        <td>
+                            <label for="numberOfProducts" class="form-label">Количество изделий</label>
+                            <input type="text" class="form-control" id="numberOfProducts" name="numberOfProducts" th:value="${warehouseData.numberOfProducts}" readonly style="max-width: 250px;"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <table>
+                    <tr>
+                        <td style="padding-right: 100px;">
+                            <label for="target" class="form-label">Задание</label>
+                            <input type="text" class="form-control" id="target" name="target" th:value="${warehouseData.target}" readonly style="max-width: 150px;"/>
+                        </td>
+                        <td>
+                            <label for="balance" class="form-label">Баланс</label>
+                            <input type="text" class="form-control" id="balance" name="balance" th:value="${warehouseData.balance}" readonly style="max-width: 250px;"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <h5>Задание на крой:</h5>
+                <table id="fieldsTable">
+                    <tr th:each="sizByDate : ${sizeByDates}">
+                        <td style="padding-right: 20px;">
+                            <label for="size" class="form-label">Размер</label>
+                            <input type="text" class="form-control" id="size" name="size"  th:value="${sizByDate.size}" readonly style="max-width: 100px;">
+                        </td>
+                        <td style="padding-right: 20px;">
+                            <label for="height" class="form-label">Рост</label>
+                            <input type="text" class="form-control" id="height" name="height" th:value="${sizByDate.height}" readonly style="max-width: 100px;">
+                        </td>
+                        <td>
+                            <label for="quantity" class="form-label">Количество</label>
+                            <input type="text" class="form-control" id="quantity" name="quantity" th:value="${sizByDate.quantity}" readonly style="max-width: 100px;">
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <table>
+                    <tr>
+                        <td style="padding-right: 140px;">
+                            <label for="normPerDay" class="form-label">Норма в день</label>
+                            <input type="text" class="form-control" id="normPerDay" name="normPerDay" th:value="${warehouseData.normPerDay}" readonly style="max-width: 100px;"/>
+                        </td>
+                        <td>
+                            <label for="inTotal" class="form-label">Итого:</label>
+                            <input type="text" class="form-control" id="inTotal" name="inTotal" th:value="${warehouseData.inTotal}" readonly style="max-width: 100px;"/>
+                        </td>
+                        <td style="padding-right: 20px;"></td> <!--Пустой элемент для создания промежутка-->
+
+                        <td>
+                            <label for="remains" class="form-label">Остаток:</label>
+                            <input type="text" class="form-control" id="remains" name="remains" th:value="${warehouseData.remains}" readonly style="max-width: 100px;"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+        </div>
+        <div class="mx-3">
+            <tr>
+                <td>
+                    <label for="startWork" class="form-label">Начало работ:</label>
+                    <input type="date" class="form-control" id="startWork" name="startWork" th:value="${warehouseData.startWork}" readonly style="width: 150px;" >
+                </td>
+                <td>
+                    <label for="endWork" class="form-label">Окончание работ:</label>
+                    <input type="date" class="form-control" id="endWork" name="endWork" th:value="${warehouseData.endWork}" readonly style="width: 150px;">
+                </td>
+            </tr>
+        </div>
+        <!--  Кнопка редактирования-->
+
+        <div class="form-group mx-3" style="margin-top: 20px;">
+            <button type="submit" class="btn btn-warning">Редактировать задание</button>
+        </div>
+
+    </form>
+</div>
+<script th:inline="javascript">
+    /* ]]>  перевод отрицательных в красный цвет*/
+    document.addEventListener("DOMContentLoaded", function() {
+        var balanceInput = document.getElementById("balance");
+        var remainsInput = document.getElementById("remains");
+
+        // Проверяем значение поля balance
+        if (parseFloat(balanceInput.value) < 0) {
+            balanceInput.style.color = "red"; // Устанавливаем красный цвет текста
+        }
+
+        // Проверяем значение поля remains
+        if (parseFloat(remainsInput.value) < 0) {
+            remainsInput.style.color = "red"; // Устанавливаем красный цвет текста
+        }
+    });
+    /* ]]> */
+</script>
+</body>
+</html>
+

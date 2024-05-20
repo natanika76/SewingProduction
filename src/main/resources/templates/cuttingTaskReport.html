@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+
+<div class="container">
+    <h2>Крой</h2>
+    <form th:action="@{/categories/cuttingTaskReport}" method="get" class="form-inline" >
+        <h2 rowspan="3" class="fw-bold" th:text="${currentUserName}" th:value="${userId}"></h2>
+
+        <!-- Выпадающий список для выбора заказчика -->
+        <div class="form-group mx-2">
+            <label for="customer">Заказчик:</label>
+            <select id="customer" name="customer" class="form-select" onchange="updateCategoryList()">
+                <option value="0" th:selected="${selectedCustomerId eq 0}"></option>
+                <option value="" selected>Выберите заказчика</option>
+                <option th:each="customer : ${customers}" th:value="${customer.id}" th:text="${customer.name}" th:selected="${customer.id eq selectedCustomerId}"></option>
+                <input type="hidden" id="selectedCustomerId" name="selectedCustomerId" th:value="${selectedCustomerId}"/><!-- Скрытое поле для хранения выбранного заказчика -->
+            </select>
+        </div>
+        <!-- Выпадающий список для выбора категории -->
+        <div class="form-group mx-2">
+            <label for="category">Категория:</label>
+            <select id="category" name="category" class="form-select">
+                <option value="0" th:selected="${selectedCategoryId eq 0}"></option>
+                <option value="" selected>Выберите категорию</option>
+                <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}" th:data-customer-id="${category.customer.id}" th:selected="${category.id eq selectedCategoryId}"></option>
+                <input type="hidden" id="selectedCategoryId" name="selectedCategoryId" th:value="${selectedCategoryId}" /><!-- Скрытое поле для хранения выбранной категории -->
+            </select>
+        </div>
+
+        <!-- Выпадающий список для выбора материала-->
+        <div class="form-group mx-2">
+            <label for="nameMaterial">Материал:</label>
+            <select id="nameMaterial" name="nameMaterial" class="form-select">
+                <option value="0" th:selected="${selectedNameMaterial eq '0'}"></option>
+                <option value="" selected>Выберите материал</option>
+                <option th:each="material : ${nameMaterial}" th:value="${material}" th:text="${material}" th:selected="${material eq selectedNameMaterial}"></option>
+                <input type="hidden" id="selectedNameMaterial" name="selectedNameMaterial" th:value="${selectedNameMaterial}"/><!-- Скрытое поле для хранения выбранного материала -->
+            </select>
+        </div>
+        <input type="hidden" id="warehouse" name="warehouse" th:value="${warehouse}" />
+        <div class="form-group d-flex justify-content-end p-2">
+            <button type="submit" class="btn btn-primary">Ок</button>
+        </div>
+
+    </form>
+    <div style="margin-top: 10px;">
+        <a th:if="${warehouse}" th:href="@{/categories/cuttingTaskReportData(warehouse=${warehouse})}" class="btn btn-primary">Ввести данные о выполнении</a>
+    </div>
+</div>
+<script th:inline="javascript">
+
+    // Отправляем дату сразу после выбора
+    document.addEventListener('DOMContentLoaded', function() {
+        var customersNameInput = document.getElementById('customer');
+        var categoriesNameInput = document.getElementById('category');
+        customersNameInput.addEventListener('change', function() {
+            // Создаем объект формы
+            var form = document.querySelector('form');
+            // Отправляем форму
+            form.submit();
+        });
+        categoriesNameInput.addEventListener('change', function() {
+            // Создаем объект формы
+            var form = document.querySelector('form');
+            // Отправляем форму
+            form.submit();
+        });
+
+    });
+    //**********************************
+</script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+ <!DOCTYPE html>
+        <html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+        <head th:replace="~{fragments/headFragment}"></head>
+
+        <body>
+
+        <div th:replace="~{fragments/headerFragment}"></div>
+
+        <br/><br/>
+
+        <div class="container">
+            <h2>Редактировать выполненную задачу</h2>
+            <form th:action="@{/admin/operations/edit/{id}(id=${operationData.id})}" method="post" th:object="${operationData}" onsubmit="return markChangesBeforeSubmit();">
+
+                <!-- Ввод даты -->
+                <div class="mb-3">
+                    <label for="date" class="form-label">Дата</label>
+                    <input type="date" class="form-control" id="date" name="date" th:value="*{date}" th:format="${#dates.format(date, 'dd-MM-yyyy')}" required/>
+                </div>
+
+                <!-- Выбор портного -->
+                <div class="mb-3">
+                    <label for="seamstress" class="form-label">Портной</label>
+                    <select class="form-control" id="seamstress" name="seamstress" th:field="*{seamstress.id}" required>
+                        <option th:each="seamstress : ${seamstresses}" th:value="${seamstress.id}" th:text="${seamstress.name}" th:selected="${seamstress.id eq operationData.seamstress?.id}" th:attr="data-hourly-rate=${seamstress.hourlyRate}"></option>
+                    </select>
+                </div>
+
+                <!-- Выбор типа задачи -->
+                <div class="mb-3">
+                    <label for="taskType" class="form-label">Тип задачи</label>
+                    <select class="form-control" id="taskType" name="taskType" th:field="*{taskType}" required>
+                        <option th:each="type : ${T(ru.vilas.sewing.dto.TaskTypes).values()}" th:value="${type}" th:text="${type.russianName}"></option>
+                    </select>
+                </div>
+
+                <!-- Выбор категории -->
+                <div class="mb-3">
+                    <label for="category" class="form-label">Категория</label>
+                    <select class="form-control" id="category" name="category" th:field="*{category.id}" required>
+                        <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}" th:selected="${category.id eq operationData.category?.id}"></option>
+                    </select>
+                </div>
+                <!-- Выбор материала -->
+                <div class="mb-3">
+                    <label for="nameMaterial" class="form-label">Материал</label>
+                    <select class="form-control" id="nameMaterial" name="nameMaterial" th:field="*{nameMaterial}" required>
+                        <option th:each="nameMaterial : ${nameMaterials}" th:value="${nameMaterial}" th:text="${nameMaterial}" th:selected="${nameMaterial eq operationData.nameMaterial}"></option>
+                    </select>
+                </div>
+                <!-- Ввод  задачи -->
+                <div class="mb-3">
+                    <label for="task" class="form-label">Задача</label>
+                    <select class="form-control" id="task" name="task" th:field="*{task.id}" required>
+                        <option th:each="task : ${tasks}" th:value="${task.id}"
+                                th:text="${task.name}" th:selected="${task.id eq operationData.task?.id}"
+                                th:attr="data-cost-per-piece=${task.costPerPiece}"
+                                th:data-category-id="${task.category.id}"
+                        ></option>
+                    </select>
+                </div>
+
+                <!-- Ввод стоимости за штуку -->
+                <div class="mb-3">
+                    <label for="costPerPiece" class="form-label">Стоимость за штуку</label>
+                    <div class="input-group">
+                        <span class="input-group-text">&#8381;</span>
+                        <input type="number" class="form-control" id="costPerPiece" name="costPerPiece" th:field="*{costPerPiece}" step="0.01" required/>
+                    </div>
+                    <small id="costPerPieceHelp" class="form-text text-muted">Введите стоимость в рублях (например, 12.34).</small>
+                </div>
+
+                <!-- Ввод часовой ставки -->
+                <div class="mb-3">
+                    <label for="hourlyRate" class="form-label">Часовая ставка</label>
+                    <div class="input-group">
+                        <span class="input-group-text">&#8381;</span>
+                        <input type="number" class="form-control" id="hourlyRate" name="hourlyRate" th:field="*{hourlyRate}" step="0.01" required/>
+                    </div>
+                    <small id="hourlyRateHelp" class="form-text text-muted">Введите ставку в рублях (например, 200.55).</small>
+                </div>
+
+                <!-- Ввод количества операций -->
+                <div class="mb-3">
+                    <label for="completedOperations" class="form-label">Сделано шт.</label>
+                    <input type="number" class="form-control" id="completedOperations" name="completedOperations" th:field="*{completedOperations}" step="1.00" required/>
+                </div>
+
+                <!-- Ввод затраченного времени -->
+                <div class="mb-3">
+                    <label for="hoursWorked" class="form-label">Затрачено времени</label><br>
+                    <input type="number" style="width: 45px;" id="hoursWorked" name="hours" onchange="markChangesBeforeSubmit();" value="0" required/>
+                    <span> : </span>
+                    <input type="number" style="width: 45px;" id="minutesWorked" name="minutes" onchange="markChangesBeforeSubmit();" value="0" required step="5"/>
+
+                    <input type="hidden" id="hoursWorkedHidden" name="hoursWorked" />
+                </div>
+
+                <script th:inline="javascript">
+                    function markChanges() {
+                        var hoursField = document.getElementById('hoursWorked');
+                        var hours = parseInt(document.getElementById('hoursWorked').value) || 0;
+                        var minutes = parseInt(document.getElementById('minutesWorked').value) || 0;
+                        var duration = 'PT' +  hours + 'H' + minutes + 'M';  // Формат: PT4H30M
+                        document.getElementById('hoursWorkedHidden').value = duration;
+                        return true;  // Возвращаем true, чтобы форма продолжила отправку
+                    }
+
+                    // Функция для восстановления значений при загрузке страницы
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var durationInput = document.getElementById('hoursWorkedHidden').value;
+                        if (durationInput) {
+                            var totalSeconds = /*[[${operationData.hoursWorked != null ? operationData.hoursWorked.toMillis() / 1000 : 0}]]*/;
+                            var hours = Math.floor(totalSeconds / 3600);
+                            var minutes = Math.floor((totalSeconds % 3600) / 60);
+
+                            document.getElementById('hoursWorked').value = hours;
+                            document.getElementById('minutesWorked').value = minutes;
+                        }
+                    });
+                </script>
+                <script th:inline="javascript">
+                    function markChangesBeforeSubmit() {
+                        var hoursField = document.getElementById('hoursWorked');
+                        var hours = parseInt(document.getElementById('hoursWorked').value) || 0;
+                        var minutes = parseInt(document.getElementById('minutesWorked').value) || 0;
+                        var duration = 'PT' +  hours + 'H' + minutes + 'M';  // Формат: PT4H30M
+                        document.getElementById('hoursWorkedHidden').value = duration;
+                        return true;  // Возвращаем true, чтобы форма продолжила отправку
+                    }
+                    document.addEventListener('DOMContentLoaded', function () {
+                        // Сохраняем исходные значения стоимости за штуку и часовой ставки для последующего использования
+                        var originalCostPerPiece = parseFloat(document.getElementById('costPerPiece').value);
+                        var originalHourlyRate = parseFloat(document.getElementById('hourlyRate').value);
+
+                        // Получаем ссылки на элементы формы
+                        var categorySelect = document.getElementById('category');
+                        var taskSelect = document.getElementById('task');
+
+                        // Запоминаем исходные задачи при загрузке страницы
+                        var originalTasks = Array.from(taskSelect.options);
+
+                        // Обновление списка задач при изменении категории
+                        categorySelect.addEventListener('change', function () {
+                            var selectedCategoryId = this.value;
+
+                            // Очищаем текущий список задач
+                            taskSelect.innerHTML = '';
+
+                            // Фильтруем задачи по выбранной категории
+                            var filteredTasks = originalTasks.filter(function (taskOption) {
+                                return taskOption.getAttribute('data-category-id') === selectedCategoryId || selectedCategoryId === '';
+                            });
+
+                            // Добавляем отфильтрованные задачи обратно в список
+                            filteredTasks.forEach(function (taskOption) {
+                                taskSelect.appendChild(taskOption.cloneNode(true));
+                            });
+
+                            // Сбрасываем выбранную задачу
+                            taskSelect.value = '';
+
+                            // Обновляем стоимость за штуку после обновления списка задач
+                            updateCostPerPiece();
+                        });
+
+                        // Обработчик события при выборе задачи
+                        taskSelect.addEventListener('change', function () {
+                            updateCostPerPiece();
+                        });
+
+                        // Обработчик события при выборе сотрудника
+                        document.getElementById('seamstress').addEventListener('change', function () {
+                            // Получаем выбранное значение сотрудника
+                            var selectedSeamstressId = this.value;
+
+                            // Находим соответствующего сотрудника в списке сотрудников
+                            var selectedSeamstress = Array.from(this.options).find(function (option) {
+                                return option.value === selectedSeamstressId;
+                            });
+
+                            // Обновляем часовую ставку, если сотрудник найден
+                            if (selectedSeamstress) {
+                                document.getElementById('hourlyRate').value = selectedSeamstress.getAttribute('data-hourly-rate') || originalHourlyRate;
+                            } else {
+                                // Если сотрудник не найден, возвращаем исходное значение
+                                document.getElementById('hourlyRate').value = originalHourlyRate;
+                            }
+                        });
+
+                        // Функция для обновления стоимости за штуку
+                        function updateCostPerPiece() {
+                            var selectedTaskId = taskSelect.value;
+                            var selectedTask = Array.from(taskSelect.options).find(function (option) {
+                                return option.value === selectedTaskId;
+                            });
+
+                            // Обновляем стоимость за штуку, если задача найдена
+                            if (selectedTask) {
+                                document.getElementById('costPerPiece').value = selectedTask.getAttribute('data-cost-per-piece') || originalCostPerPiece;
+                            } else {
+                                // Если задача не найдена, возвращаем исходное значение
+                                document.getElementById('costPerPiece').value = originalCostPerPiece;
+                            }
+                        }
+
+                    });
+                </script>
+
+                <!-- Вывод ошибок валидации -->
+                <div th:if="${validationErrors}" class="alert alert-danger">
+                    <ul>
+                        <li th:each="error : ${validationErrors}" th:text="${error.defaultMessage}"></li>
+                    </ul>
+                </div>
+
+                <!-- Кнопка для отправки формы -->
+                <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+            </form>
+        </div>
+
+        </body>
+        </html>

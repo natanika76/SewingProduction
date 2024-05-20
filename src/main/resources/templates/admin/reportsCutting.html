@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<!--<div th:replace="fragments/headFragment"></div>-->
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<!--<div th:replace="fragments/headerFragment"></div>-->
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+ <div class="container">
+    <h2>Выберите действие:</h2>
+    <ul class="list-group">
+        <li class="list-group-item">
+           <a th:href="@{/admin/editReportsCutting}" class="text-dark fs-5">Крой - редактировать отчёт швеи</a>
+
+        </li>
+        <li class="list-group-item">
+            <a th:href="@{/admin/reports}" class="text-dark fs-5">Крой - создать новый отчёт </a>
+        </li>
+    </ul>
+</div>
+</div>
+</body>
+</html>

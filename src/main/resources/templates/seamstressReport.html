@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+
+<div class="container">
+    <h2>Отчет по заработку</h2>
+
+    <th:block th:each="earningsDto : ${earningsList}" th:if="${earningsDto.seamstressId eq currentUserId}">
+    <h2 rowspan="3" class="fw-bold" th:text="${earningsDto.seamstressName}"></h2>
+    </th:block>
+
+  <!--   Форма выбора даты -->
+    <form th:action="@{/categories/seamstressReport}" method="get" class="form-inline">
+        <div class="form-group mx-2">
+            <label for="startDate">От:</label>
+            <input type="date" id="startDate" name="startDate" class="form-control" required th:value="${startDate}" />
+        </div>
+
+        <div class="form-group mx-2">
+            <label for="endDate">До:</label>
+            <input type="date" id="endDate" name="endDate" class="form-control" required th:value="${endDate}" />
+        </div>
+
+
+
+        <div class="form-group d-flex justify-content-end p-2">
+            <button type="submit" class="btn btn-primary">Ок</button>
+        </div>
+
+    </form>
+
+    <!-- Добавляем условие для показа таблицы в зависимости от выбранной категории -->
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th style="width: 100px;">Имя швеи</th>
+            <th>Тип</th>
+            <!-- Используем Thymeleaf для генерации заголовков дат -->
+            <th th:each="paymentByDate : ${earningsList[0].paymentsByDateList}" th:text="${T(java.time.format.DateTimeFormatter).ofPattern('dd.MM.yy').format(paymentByDate.date)}"></th>
+            <th>Общая сумма</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Предполагаем, что currentUserId содержит идентификатор текущего пользователя -->
+        <th:block th:each="earningsDto : ${earningsList}" th:if="${earningsDto.seamstressId eq currentUserId}">
+            <tr>
+                <!-- Добавьте соответствующие данные для вывода -->
+                <td rowspan="3" class="fw-bold" th:text="${earningsDto.seamstressName}"></td>
+                <td>Кол-е</td>
+                <!-- Используйте Thymeleaf для генерации данных PaymentsByDate -->
+                <td th:each="paymentByDate : ${earningsDto.paymentsByDateList}" th:text="${paymentByDate.quantitativePayments}"></td>
+                <td rowspan="3" class="fw-bold">
+                    <div th:text="${earningsDto.totalAmount}"></div>
+                    <div th:text="'- ' + ${earningsDto.salary}"></div>
+                    <div th:text="'= ' + ${earningsDto.result}"></div>
+                </td>
+            </tr>
+            <tr>
+                <td>Вр-е</td>
+                <!-- Используем Thymeleaf для генерации данных PaymentsByDate -->
+                <td th:each="paymentByDate : ${earningsDto.paymentsByDateList}" th:text="${paymentByDate.hourlyPayments}"></td>
+
+            </tr>
+            <tr>
+                <td>Уп-ка</td>
+                <!-- Используем Thymeleaf для генерации данных PaymentsByDate -->
+                <td th:each="paymentByDate : ${earningsDto.paymentsByDateList}" th:text="${paymentByDate.packagingPayments}"></td>
+            </tr>
+        </th:block>
+
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
+
+
+
+
+

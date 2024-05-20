@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<!--<div th:replace="fragments/headFragment"></div>-->
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<!--<div th:replace="fragments/headerFragment"></div>-->
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br /><br />
+
+<div class="container">
+    <h2>Выберите категорию:</h2>
+    <ul class="list-group">
+        <li th:each="category : ${categories}" class="list-group-item">
+            <!--<a th:href="@{/operations/category/{categoryId}(categoryId=${category.id})}" th:text="${category.name}" class="text-dark fs-5"></a>-->
+            <a th:href="@{/operations/material/{categoryId}(categoryId=${category.id})}" th:text="${category.name}" class="text-dark fs-5"></a>
+        </li>
+    </ul>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<!--<div th:replace="fragments/headFragment"></div>-->
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<!--<div th:replace="fragments/headerFragment"></div>-->
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+
+<div class="container">
+    <h2>Редактирование отчёта швеи - крой</h2>
+    <form th:action="@{/admin/editReportsCuttingId}" method="post">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Заказчик</th>
+                <th>Категория</th>
+                <th>Материал</th>
+                <th>Размер</th>
+                <th>Рост</th>
+                <th>Выполнено</th>
+                <th>Дата</th>
+                <th>Швея</th>
+            </tr>
+            </thead>
+            <tbody>
+            <td th:text="${reports.customerName}"/>
+            <td th:text="${reports.categoryName}"/>
+            <td th:text="${reports.nameMaterial}"/>
+            <td th:text="${reports.size}"/>
+            <td th:text="${reports.height}"/>
+            <td><input type="text" name="quantity" th:value="${reports.quantity}"/></td>
+            <td><input type="date" name="dateWork" th:value="${reports.dateWork}"/></td>
+            <td th:text="${reports.seamstressName}"/>
+            </tbody>
+        </table>
+        <!-- Скрытые поля для передачи данных -->
+        <input type="hidden" id="startWork" th:value="${startWork}" />
+        <input type="hidden" id="endWork" th:value="${endWork}" />
+        <input type="hidden" id="selectedDatePost" name="date" th:value="${date}" />
+        <input type="hidden" id="done" th:value="${reports.done}" />
+        <input type="hidden" name="cuttingId" th:value="${reports.cuttingId}" />
+
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+</div>
+<script th:inline="javascript">
+    // Получаем элемент поля "Выполнено" и скрытое поле с максимальным значением
+    var quantityInput = document.querySelector('input[name="quantity"]');
+    var maxQuantity = parseInt(document.getElementById('done').value);
+
+    // Добавляем обработчик события для изменения значения поля "Выполнено"
+    quantityInput.addEventListener('input', function() {
+        var enteredQuantity = parseInt(this.value);
+
+        // Проверяем, чтобы введенное значение не превышало максимальное значение
+        if (enteredQuantity > maxQuantity) {
+            alert('Значение "Выполнено" не может превышать остаток' + maxQuantity);
+            this.value = maxQuantity; // Устанавливаем введенное значение равным максимальному
+        }
+    });
+    //*********************************************
+    // Получаем элемент выбора даты
+    var dateInput = document.querySelector('input[type="date"]');
+
+    // Получаем данные о начальной и конечной датах из скрытых полей
+    var startWork = new Date(document.getElementById('startWork').value);
+    var endWork = new Date(document.getElementById('endWork').value);
+
+    // Преобразуем даты в строки формата yyyy-mm-dd, который используется в элементе выбора даты
+    var formattedStartDate = startWork.toISOString().split('T')[0];
+    var formattedEndDate = endWork.toISOString().split('T')[0];
+
+    // Устанавливаем ограничения для выбора даты в элементе ввода
+    dateInput.min = formattedStartDate; // Минимальная дата
+    dateInput.max = formattedEndDate; // Максимальная дата
+
+    // Получаем текущую дату
+    var today = new Date().toISOString().split('T')[0];
+
+    // Устанавливаем ограничение на выбор даты не позже сегодняшней
+    dateInput.max = today;
+
+    // Добавляем обработчик события для изменения значения элемента выбора даты
+    dateInput.addEventListener('change', function() {
+        var selectedDate = new Date(this.value);
+
+        // Проверяем, чтобы выбранная дата была в пределах периода startWork и endWork и не позднее сегодняшней даты
+        if (selectedDate < startWork || selectedDate > endWork || selectedDate > today) {
+            alert('Выбранная дата должна быть в пределах от ' + formattedStartDate + ' до ' + formattedEndDate + ', и не позднее сегодняшней даты.');
+            this.value = ''; // Очищаем значение выбранной даты
+        }
+    });
+</script>
+</body>
+</html>

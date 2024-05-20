@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+
+<div class="container">
+    <h2>Редактировать швею</h2>
+    <form th:action="@{/admin/seamstresses/edit}" method="post">
+        <input type="hidden" th:field="${seamstress.id}"/>
+        <div class="mb-3">
+            <label for="name" class="form-label">ФИО</label>
+            <input type="text" class="form-control" id="name" name="name" th:field="${seamstress.name}" required/>
+        </div>
+        <div class="mb-3">
+            <label for="username" class="form-label">Логин</label>
+            <input type="text" class="form-control" id="username" name="username" th:field="${seamstress.username}" required/>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Пароль</label>
+            <input type="password" class="form-control" id="password" name="password" th:field="${seamstress.password}" />
+        </div>
+        <div class="mb-3">
+            <label for="hourlyRate" class="form-label">Часовая ставка</label>
+            <input type="text" class="form-control" id="hourlyRate" name="hourlyRate" th:field="${seamstress.hourlyRate}" />
+            <small class="text-muted">Введите часовую ставку, например, 500.80</small>
+        </div>
+        <div class="mb-3">
+            <label for="salary" class="form-label">Оклад</label>
+            <input type="text" class="form-control" id="salary" name="salary" th:field="${seamstress.salary}" />
+            <small class="text-muted">Введите сумму оклада, например, 5000.50</small>
+        </div>
+        <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+</div>
+
+</body>
+</html>

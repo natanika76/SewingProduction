@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+<div th:replace="~{fragments/headerFragment}"></div>
+<br/>
+<div class="container">
+    <h2>Упаковка</h2>
+
+    <form th:action="@{/admin/packagingProcess}" method="get">
+        <div class="form-group">
+            <label for="customer" class="form-label"> Сортировка по заказчику:</label>
+            <select id="customer" name="customer" class="form-select">
+                <option value="0" th:selected="${selectedCustomerId eq 0}">Все заказчики</option>
+                <option th:each="customer : ${customers}" th:value="${customer.id}" th:text="${customer.name}" th:selected="${customer.id eq selectedCustomerId}"></option>
+            </select>
+            <!-- Выпадающий список для выбора категории -->
+            <label for="category">Сортировка по категории:</label>
+            <select id="category" name="category" class="form-select">
+                <option value="0" th:selected="${selectedCategoryId eq 0}">Все категории</option>
+                <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}" th:data-customer-id="${category.customer.id}" th:selected="${category.id eq selectedCategoryId}"></option>
+                <input type="hidden" id="selectedCategoryId" name="selectedCategoryId" th:value="${selectedCategoryId}" /><!-- Скрытое поле для хранения выбранной категории -->
+            </select>
+            <label for="nameMaterial">Сортировка по материалу:</label>
+            <select id="nameMaterial" name="nameMaterial" class="form-select">
+                <option value="" th:selected="${selectedNameMaterial eq ''}">Все материалы</option>
+                <option th:each="material : ${nameMaterials}" th:value="${material}" th:text="${material}" th:selected="${material eq selectedNameMaterial}"></option>
+                <input type="hidden" id="selectedNameMaterial" name="selectedNameMaterial" th:value="${selectedNameMaterial}"/><!-- Скрытое поле для хранения выбранного материала -->
+            </select>
+        </div>
+    </form>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Заказчик</th>
+            <th>Категория</th>
+            <th>Материал</th>
+            <th>Упаковано</th>
+            <th></th>
+            <th>Задание</th>
+            <th>Действия</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="warehouse : ${warehouses}">
+            <td th:text="${warehouse.customerName}"/>
+            <td th:text="${warehouse.categoryName}"/>
+            <td th:text="${warehouse.nameMaterial}"/>
+            <td th:text="${warehouse.packaging}"></td>
+            <td> из </td>
+            <td th:text="${warehouse.target}"></td>
+            <td>
+                <!-- <a th:href="@{'/admin/cuttingProcess/show/'+ ${warehouse.id}}" class="btn btn-warning btn-sm">-->
+                <a th:href="@{/admin/packagingProcess/show/{id}(id=${warehouse.id})}" class="btn btn-warning btn-sm">
+                    открыть
+                </a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<script th:inline="javascript">
+    // Отправляем дату сразу после выбора
+    document.addEventListener('DOMContentLoaded', function() {
+        var customersNameInput = document.getElementById('customer');
+        var categoriesNameInput = document.getElementById('category');
+        var nameMaterialInput = document.getElementById('nameMaterial');
+
+        customersNameInput.addEventListener('change', function() {
+            // Создаем объект формы
+            var form = document.querySelector('form');
+            // Отправляем форму
+            form.submit();
+        });
+        categoriesNameInput.addEventListener('change', function() {
+            // Создаем объект формы
+            var form = document.querySelector('form');
+            // Отправляем форму
+            form.submit();
+        });
+        nameMaterialInput.addEventListener('change', function() {
+            // Создаем объект формы
+            var form = document.querySelector('form');
+            // Отправляем форму
+            form.submit();
+        });
+    });
+</script>
+</body>
+</html>
+

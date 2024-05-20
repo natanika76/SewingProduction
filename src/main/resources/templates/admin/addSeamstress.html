@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+
+<div class="container">
+    <h2>Добавить новую швею</h2>
+    <form th:action="@{/admin/seamstresses/new}" method="post">
+        <div class="mb-3">
+            <label for="name" class="form-label">ФИО</label>
+            <input type="text" class="form-control" id="name" name="name" th:value="${user != null ? user.name : ''}" required/>
+        </div>
+        <div class="mb-3">
+            <label for="username" class="form-label">Логин</label>
+            <input type="text" class="form-control" id="username" name="username" th:value="${user != null ? user.username : ''}" required/>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Пароль</label>
+            <input type="password" class="form-control" id="password" name="password" required/>
+        </div>
+        <div class="mb-3">
+            <label for="hourlyRate" class="form-label">Часовая ставка</label>
+            <div class="input-group">
+                <span class="input-group-text">&#8381;</span>
+                <input type="number" class="form-control" id="hourlyRate" name="hourlyRate" th:value="${user != null ? user.hourlyRate : ''}" step="0.10" required />
+            </div>
+            <small id="costPerPieceHelp" class="form-text text-muted">Введите часовую ставку в рублях (например, 220.34).</small>
+        </div>
+        <div class="mb-3">
+            <label for="salary" class="form-label">Оклад</label>
+            <div class="input-group">
+                <span class="input-group-text">&#8381;</span>
+                <input type="number" class="form-control" id="salary" name="salary" th:value="${user != null ? user.salary : ''}" step="0.10" required />
+            </div>
+            <small id="salaryHelp" class="form-text text-muted">Введите оклад в рублях (например, 10000,30).</small>
+        </div>
+        <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+        <button type="submit" class="btn btn-primary">Добавить</button>
+    </form>
+</div>
+
+</body>
+</html>

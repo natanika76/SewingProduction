@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+
+<div class="container">
+    <h2>Редактирование заказчика</h2>
+    <form th:action="@{/admin/customers/edit}" method="post">
+        <div class="mb-3">
+            <label for="name" class="form-label">Наименование заказчика</label>
+            <input type="text" class="form-control" id="name" name="name" th:value="${customer.name}" required/>
+        </div>
+        <input type="hidden" th:field="${customer.id}"/>
+        <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+</div>
+
+</body>
+</html>

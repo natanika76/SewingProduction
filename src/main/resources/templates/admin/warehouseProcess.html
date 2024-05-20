@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+<div th:replace="~{fragments/headerFragment}"></div>
+<br/>
+<div class="container">
+    <h2>Cклад</h2>
+
+    <form th:action="@{/admin/warehouseProcess}" method="get">
+    <div class="form-group">
+        <label for="customer" class="form-label"> Сортировка по заказчику:</label>
+        <select id="customer" name="customer" class="form-select">
+            <option value="0" th:selected="${selectedCustomerId eq 0}">Все заказчики</option>
+            <option th:each="customer : ${customers}" th:value="${customer.id}" th:text="${customer.name}" th:selected="${customer.id eq selectedCustomerId}"></option>
+        </select>
+        <!-- Выпадающий список для выбора категории -->
+
+            <label for="category">Сортировка по категории:</label>
+            <select id="category" name="category" class="form-select">
+                <option value="0" th:selected="${selectedCategoryId eq 0}">Все категории</option>
+                <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}" th:data-customer-id="${category.customer.id}" th:selected="${category.id eq selectedCategoryId}"></option>
+                <input type="hidden" id="selectedCategoryId" name="selectedCategoryId" th:value="${selectedCategoryId}" /><!-- Скрытое поле для хранения выбранной категории -->
+            </select>
+
+        <label for="nameMaterial">Сортировка по материалу:</label>
+        <select id="nameMaterial" name="nameMaterial" class="form-select">
+            <option value="" th:selected="${selectedNameMaterial eq ''}">Все материалы</option>
+            <option th:each="material : ${nameMaterials}" th:value="${material}" th:text="${material}" th:selected="${material eq selectedNameMaterial}"></option>
+            <input type="hidden" id="selectedNameMaterial" name="selectedNameMaterial" th:value="${selectedNameMaterial}"/><!-- Скрытое поле для хранения выбранного материала -->
+        </select>
+    </div>
+
+    </form>
+<div style="margin-top: 10px;">
+    <a th:href="@{/admin/warehouseProcess/new}" class="btn btn-primary">Создать новое задание</a>
+</div>
+     <table class="table">
+         <thead>
+         <tr>
+             <th>Заказчик</th>
+             <th>Категория</th>
+             <th>Материал</th>
+             <th>Задание</th>
+             <th>Действия</th>
+         </tr>
+         </thead>
+         <tbody>
+         <tr th:each="warehouse : ${warehouses}">
+             <td th:text="${warehouse.customerName}"/>
+             <td th:text="${warehouse.categoryName}"/>
+             <td th:text="${warehouse.nameMaterial}"/>
+             <td th:text="${warehouse.done}"></td>
+         <td>
+             <a th:href="@{'/admin/warehouseProcess/show/' + ${warehouse.id}}" class="btn btn-warning btn-sm">
+                  открыть
+              </a>
+              <a href="#" class="btn btn-danger btn-sm"
+                 data-bs-toggle="modal"
+                 th:attr="data-bs-target='#archiveModal' + ${warehouse.id}">
+                  В архив
+              </a>
+          </td>
+          </tr>
+          </tbody>
+      </table>
+
+
+  <div th:each="warehouse : ${warehouses}">
+      <div th:attr="id='archiveModal' + ${warehouse.id}" class="modal fade" tabindex="-1" aria-labelledby="archiveModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+              <div class="modal-content">
+                  <div class="modal-header">
+                      <h5 class="modal-title" id="archiveModalLabel">Подтверждение отправки в архив</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                      <!-- Ваше сообщение подтверждения отправки в архив -->
+                    Уверены, что хотите отправить задачу в архив?
+                </div>
+                <div class="modal-footer">
+                    <!-- Кнопка для подтверждения отправки в архив -->
+                    <a th:href="@{/admin/warehouseProcess/archive/{id}(id=${warehouse.id})}"
+                       class="btn btn-danger">Отправить в архив</a>
+                    <!-- Кнопка для закрытия модального окна -->
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+<!--блок для отображения сообщения об неудачном создании задания -->
+<div th:if="${param.success}" class="alert alert-success" role="alert">
+    <p>Задание успешно изменено</p>
+</div>
+<div th:if="${param.error}" class="alert alert-danger" role="alert">
+    <p>Невозможно изменить задание, так как есть активное задание с таким заказчиком, категорией и материалом</p>
+</div>
+</div>
+<script th:inline="javascript">
+    //Перегрузка страницы по клику в любом месте и убрать поле по клику
+    document.addEventListener("DOMContentLoaded", function() {
+        var alert = document.querySelector(".alert");
+
+        if (alert) {
+            // Добавляем обработчик события клика для всего документа
+            document.addEventListener("click", function(event) {
+                // Проверяем, был ли клик выполнен вне элемента с классом .alert
+                if (!alert.contains(event.target)) {
+                    // Если клик выполнен вне окна алерта, скрываем его и перезагружаем форму
+                    alert.style.display = "none";
+
+                    // Перезагрузка формы
+                    var form = document.querySelector('form');
+                    form.submit();
+                }
+            });
+
+            // Добавляем обработчик для кнопок закрытия алерта
+            var alertCloseButtons = alert.querySelectorAll("button.close");
+
+            alertCloseButtons.forEach(function(button) {
+                button.addEventListener("click", function() {
+                    var alert = this.parentElement;
+                    alert.style.display = "none";
+                });
+            });
+        }
+    });
+
+    //*******************
+    // Отправляем дату сразу после выбора
+    document.addEventListener('DOMContentLoaded', function() {
+        var customersNameInput = document.getElementById('customer');
+        var categoriesNameInput = document.getElementById('category');
+        var nameMaterialInput = document.getElementById('nameMaterial');
+
+        customersNameInput.addEventListener('change', function() {
+            // Создаем объект формы
+            var form = document.querySelector('form');
+            // Отправляем форму
+            form.submit();
+        });
+        categoriesNameInput.addEventListener('change', function() {
+            // Создаем объект формы
+            var form = document.querySelector('form');
+            // Отправляем форму
+            form.submit();
+        });
+        nameMaterialInput.addEventListener('change', function() {
+            // Создаем объект формы
+            var form = document.querySelector('form');
+            // Отправляем форму
+            form.submit();
+        });
+    });
+</script>
+</body>
+</html>
+
+

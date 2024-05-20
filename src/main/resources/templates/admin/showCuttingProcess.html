@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+
+<div class="container">
+    <h2>Задание на крой</h2>
+
+    <form th:action="@{/admin/cuttingProcess/show/{id} (id = ${warehouseDto.id})}" method="get"  class="form-inline"th:object="${warehouseDto}" >
+        <h5 rowspan="3" class="fw-bold" th:text="${customersName}" ></h5>
+        <h5 rowspan="3" class="fw-bold" th:text="${categoryName}" ></h5>
+        <h5 rowspan="3" class="fw-bold" th:text="${materialName}" ></h5>
+
+        <div class="form-group mx-2">
+            <label for="startDate">Начало работ:</label>
+            <input type="date" id="startDate" name="startDate" class="form-control" required th:value="${startDate}"/>
+        </div>
+
+        <div class="form-group mx-2">
+            <label for="endDate">Конец работ:</label>
+            <input type="date" id="endDate" name="endDate" class="form-control" required th:value="${endDate}" />
+        </div>
+        <div class="form-group d-flex justify-content-end p-2">
+            <button type="submit" class="btn btn-primary">Ок</button>
+        </div>
+
+        <h5>Задание на крой:</h5>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Размер:</th>
+                <th>Рост:</th>
+                <th>Кол-во</th>
+                <th></th>
+                <th>Раскроено:</th>
+                <th>Остаток:</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="sizByDate : ${sizeByDateDto}">
+                <td th:text="${sizByDate.size}"></td>
+                <td th:text="${sizByDate.height}"></td>
+                <td th:text="${sizByDate.quantity}"></td>
+                <td style="text-align: right;">Кол-во:</td>
+                <td th:text="${sizByDate.done}"></td>
+                <td th:text="${sizByDate.fullDone}"></td>
+            </tr>
+            <tr style="font-weight: bold;" th:each="warehouse : ${warehouseDto}">
+                <td></td>
+                <th style="text-align: right;">Итого:</th>
+                <td th:text="${warehouse.inTotal}" id="inTotal"></td>
+                <td style="text-align: right;">Итого:</td>
+                <td th:text="${fullDone}" id="fullDone" name="fullDone" th:value="${fullDone}"></td>
+                <td th:text="${fullRemains}" id="fullRemains" name="fullRemains" th:value="${fullRemains}"></td>
+            </tr>
+        </tbody>
+        </table>
+        <h5 class="fw-bold">
+            <span style="margin-right: 20px;" th:text="${warehouseDto != null ? 'Норма в день: ' + warehouseDto.normPerDay : ''}"></span>
+        </h5>
+        <input type="hidden" id="normPerDay" name="normPerDay" th:value="${warehouseDto.normPerDay}">
+
+        <!-- Выпадающий список для выбора закройщицы-->
+        <div class="form-group mx-2">
+            <label for="seamstress">Закройщицы:</label>
+            <select id="seamstress" name="seamstress" class="form-select">
+                <option value="0" th:selected="${selectedSeamstressId eq 0}"></option>
+                <option value="" selected>Все закройщицы</option>
+                <option th:each="seamstress : ${seamstresses}" th:value="${seamstress.id}" th:text="${seamstress.name}" th:selected="${seamstress.id  eq selectedSeamstressId}"></option>
+                <input type="hidden" id="selectedSeamstressId" name="selectedSeamstressId" th:value="${selectedSeamstressId}"/>
+            </select>
+        </div>
+
+        <table>
+            <thead>
+            <tr>
+                <th></th>
+                <th></th>
+                <th> Раскроено </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr style="font-weight: bold;" th:each="warehouse : ${warehouseDto}">
+                <td th:text="${fullDone}" id="total" ></td>
+                  <td></td>
+                  <td style="text-align: center;">из</td>
+                  <td th:text="${warehouse.inTotal}"></td>
+              </tr>
+              </tbody>
+          </table>
+
+
+          <style>
+              #app {
+                  width: 100%; /* Ширина в 100% ширины родительского контейнера */
+                  height: 50vh; /* Высота в 100% высоты видимой области страницы */
+              }
+          </style>
+
+          <div id="app" ></div>
+
+      </form>
+  </div>
+
+  <script th:inline="javascript">
+
+      // <!--********************************************************************-->
+    // Отправляем дату сразу после выбора швеи
+    document.addEventListener('DOMContentLoaded', function () {
+       var seamstressnameInput = document.getElementById('seamstress');
+       seamstressnameInput.addEventListener('change', function () {
+            var form = document.querySelector('form')
+            form.submit();
+        });
+    });
+    //+++++++++++++++++++++++++++++++++++++++++
+    /*Сумма в столбце Выполнение*/
+    var sum = 0;
+    /* Получаем все ячейки с помощью querySelectorAll */
+    var doneCells = document.querySelectorAll('tbody td:nth-child(5)');
+
+    /* Перебираем все ячейки и суммируем их значения */
+    doneCells.forEach(function(cell) {
+        var value = parseInt(cell.textContent.trim(), 10);
+        if (!isNaN(value)) {
+            sum += value;
+        }
+    });
+
+    /* Записываем сумму в ячейку fullDone */
+    document.getElementById('fullDone').innerText = sum;
+
+      /*Сумма в столбце Остаток*/
+      var summa = 0;
+      /* Получаем все ячейки с помощью querySelectorAll */
+      var fullRemainsCells = document.querySelectorAll('tbody td:nth-child(6)');
+
+      /* Перебираем все ячейки и суммируем их значения */
+      fullRemainsCells.forEach(function(cell) {
+          var value = parseInt(cell.textContent.trim(), 10);
+          if (!isNaN(value)) {
+              summa += value;
+          }
+      });
+
+      /* Записываем сумму в ячейку fullRemains */
+      document.getElementById('fullRemains').innerText = summa;
+
+      //**************** /* График*/
+
+    // Получаем значения дат начала и конца из соответствующих полей формы
+    var startDate = document.getElementById("startDate").value;
+    var endDate = document.getElementById("endDate").value;
+
+    // Создаем массив дат между начальной и конечной датами
+    var datesInRange = [];
+    var currentDate = new Date(startDate); // Преобразуем строку даты в объект Date
+
+    // Пока текущая дата меньше или равна конечной дате, добавляем ее в массив
+    while (currentDate <= new Date(endDate)) {
+        // Преобразуем текущую дату в строку в формате "день.месяц"
+        var day = ("0" + currentDate.getDate()).slice(-2); // Добавляем ведущий ноль, если число меньше 10
+        var month = ("0" + (currentDate.getMonth() + 1)).slice(-2); // Добавляем ведущий ноль, если месяц меньше 10
+        var formattedDate = day + '.' + month;
+        datesInRange.push(formattedDate);
+        // Переходим к следующей дате
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    //****
+    // Создаем массив данных для графика
+    var seriesData = [];
+
+    var chartCuttingDto = /*[[${chartCuttingDto}]]*/ [];
+
+    var total = 0;
+
+    chartCuttingDto.forEach(function(dto) {
+        total = dto.total;
+        document.getElementById('total').innerText = total;
+        // Проверяем, равно ли значение quantity нулю
+        if (dto.quantity !== 0) {
+            // Добавляем значение поля quantity и имя швеи в массив данных
+            seriesData.push({
+                value: dto.quantity,
+               /* label: {
+                    show: true,
+                    position: 'top',
+                    position: 'inside',
+                    rotate: 90, // Устанавливаем угол поворота текста
+                    formatter: dto.seamstressName, // Отображаем имя швеи внутри столбца
+                    color: 'white' // Цвет белый
+                }  */
+            });
+        } else {
+            // Если значение quantity равно 0, просто добавляем 0 в массив данных
+            seriesData.push(0);
+        }
+    });
+
+
+    //*************************
+    var myChart = echarts.init(document.getElementById('app'));
+    // Получаем значение поля "Норма в день"
+    var normPerDayValue = document.getElementById("normPerDay").value;
+
+
+    option = {
+        xAxis: {
+            name: 'Даты',
+            type: 'category',
+            data: datesInRange,
+            axisLabel: {
+                rotate: 90 // Устанавливаем угол поворота текста в градусах (90 градусов для вертикального направления)
+            },
+            axisLine: {
+                symbol: ['none', 'arrow'], // Добавляем стрелку к оси X
+                symbolSize: [8, 20], // Размер стрелки
+                lineStyle: {
+                    color: 'black' // Цвет линии оси
+                }
+            }
+        },
+        yAxis: [
+            {
+                name: 'Выполнено',
+                type: 'value',
+                axisLine: {
+                    show: true,
+                    symbol: ['none', 'arrow'], // Добавляем стрелки к оси Y
+                    symbolSize: [8, 20], // Размер стрелок
+                    lineStyle: {
+                        color: 'black'
+                    }
+                },
+                axisLabel: {
+                    formatter: '{value}'
+                },
+                axisPointer: {
+                    show: false
+                },
+                splitLine: { show: true }, // Отключаем линии сетки, если не нужны
+                splitArea: { show: true }, // Отключаем заливку сетки, если не нужна
+                axisTick: { show: true }, // Отключаем метки на оси, если не нужны
+            }
+        ],
+        series: [
+            {
+                data: seriesData, // Передаем массив данных для столбцов
+                type: 'bar',
+                showBackground: true,
+                backgroundStyle: {
+                    color: 'rgba(220, 220, 220, 0.8)'
+                },
+                // Устанавливаем ширину столбцов
+                barWidth: '40%', // Например, 40% от ширины категории
+                barCategoryGap: '20%', // Например, 20% от ширины категории
+                label: { // Добавляем параметр label для отображения числовых значений
+                    show: true, // Показываем метку
+                    position: 'top', // Позиция метки над столбцом
+                    color: 'black', // Цвет текста метки
+                    formatter: '{c}', // Формат числового значения
+
+                },
+            },
+
+            {
+                name: 'Норма', // Название серии данных
+                type: 'line', // Тип графика (линейный)
+                yAxisIndex: 0, // Индекс оси, которая будет использоваться для этой серии данных
+                symbol: 'none', // Убираем маркеры точек
+                data: [normPerDayValue], // Задаем только одну точку для начала линии
+                markLine: {
+                    data: [
+                        { yAxis: normPerDayValue, lineStyle: { color: 'red', type: 'dashed' } } // Добавляем горизонтальную линию
+                    ]
+                }
+            }
+        ]
+    };
+
+    myChart.setOption(option);
+
+
+</script>
+</body>
+</html>
+

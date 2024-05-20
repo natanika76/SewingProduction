@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<!--<div th:replace="fragments/headFragment"></div>-->
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<!--<div th:replace="fragments/headerFragment"></div>-->
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br />
+<div class="container">
+    <h2>Выберите отчёт:</h2>
+    <ul class="list-group">
+        <li class="list-group-item">
+            <a th:href="@{/admin/reportsCutting}" class="text-dark fs-5">Крой</a>
+        </li>
+        <li class="list-group-item">
+            <a  class="text-dark fs-5">Упаковка</a>
+        </li>
+    </ul>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" >
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+<div class="container">
+<h2>Графики задач</h2>
+    <form th:action="@{/admin/shipmentProcess/chart/{warehouseId} (warehouseId = ${warehouseDto.id})}" method="get"  class="form-inline"th:object="${warehouseDto}" >
+        <h5 class="fw-bold">
+            <span style="margin-right: 20px;" th:text="'Заказчик: ' + ${customersName}"></span>
+            <span style="margin-right: 20px;" th:text="'Категория: ' + ${categoryName}"></span>
+            <span style="margin-right: 20px;" th:text="'Материал: ' + ${materialName}"></span>
+        </h5>
+        <br/><br/>
+        <!-- Выпадающий список для выбора закройщицы-->
+        <div class="form-group mx-2">
+            <label for="seamstress">Выбрать швею:</label>
+            <select id="seamstress" name="seamstress" class="form-select">
+                <option value="0" th:selected="${selectedSeamstressId eq 0}"></option>
+                <option value="" selected>Все швеи</option>
+                <option th:each="seamstress : ${seamstresses}" th:value="${seamstress.id}" th:text="${seamstress.name}" th:selected="${seamstress.id  eq selectedSeamstressId}"></option>
+                <input type="hidden" id="selectedSeamstressId" name="selectedSeamstressId" th:value="${selectedSeamstressId}"/>
+            </select>
+        </div>
+
+        <input type="hidden" id="startDate" name="startDate" th:value="${startDate}" />
+        <input type="hidden" id="endDate" name="endDate" th:value="${endDate}" />
+
+        <h5 class="fw-bold">
+            <span style="margin-right: 20px;" th:text="'Количественные задачи:' "></span>
+        </h5>
+     <div style="font-weight: bold;text-align: center;" th:each="chartTaskDto, status : ${chartTaskDtos}">
+
+              <div th:text="${chartTaskDto.taskName}"> </div>
+                <div th:text="'(' + ${chartTaskDto.done} + ' ' + 'из' + ' ' + ${chartTaskDto.inTotal} + ')'"></div>
+                                <!-- Графия текущей строки-->
+       <div th:id="'chart' + ${status.index}" class="chart-container" style="width: 100%; height: 25vh;"></div>
+    </div>
+        <h5 class="fw-bold">
+        <span style="margin-right: 20px;" th:text="'Часовые задачи:' "></span>
+        </h5>
+        <div style="font-weight: bold;text-align: center;" th:each="chartTaskDtoHourly, status : ${chartTaskDtosHourly}">
+
+            <div th:text="${chartTaskDtoHourly.taskName}"> </div>
+            <!--<div th:text="'(' + ${chartTaskDto.done} + ' ' + 'из' + ' ' + ${chartTaskDtoHourly.inTotal} + ')'"></div>-->
+            <!-- Графия текущей строки-->
+            <div th:id="'chartHourly' + ${status.index}" class="chart-container" style="width: 100%; height: 25vh;"></div>
+        </div>
+
+        <h5 class="fw-bold">
+            <span style="margin-right: 20px;" th:text="'Задачи по упаковке:' "></span>
+        </h5>
+        <div style="font-weight: bold;text-align: center;" th:each="chartTaskDtoPackaging, status : ${chartTaskDtosPackaging}">
+
+            <div th:text="${chartTaskDtoPackaging.taskName}"> </div>
+            <div th:text="'(' + ${chartTaskDtoPackaging.done} + ' ' + 'из' + ' ' + ${chartTaskDtoPackaging.inTotal} + ')'"></div>
+            <div th:id="'chartPackaging' + ${status.index}" class="chart-container" style="width: 100%; height: 25vh;"></div>
+        </div>
+    </form>
+</div>
+
+   <script th:inline="javascript">
+       //***********
+       // Отправляем сразу после выбора швеи
+       document.addEventListener('DOMContentLoaded', function () {
+           var seamstressnameInput = document.getElementById('seamstress');
+           seamstressnameInput.addEventListener('change', function () {
+               var form = document.querySelector('form')
+               form.submit();
+           });
+       });
+       // Получаем значения дат начала и конца из соответствующих полей формы
+       var startDate = document.getElementById("startDate").value;
+       var endDate = document.getElementById("endDate").value;
+
+       // Создаем массив дат между начальной и конечной датами
+       var datesInRange = [];
+       var currentDate = new Date(startDate); // Преобразуем строку даты в объект Date
+
+       // Пока текущая дата меньше или равна конечной дате, добавляем ее в массив
+       while (currentDate <= new Date(endDate)) {
+           // Преобразуем текущую дату в строку в формате "день.месяц"
+           var day = ("0" + currentDate.getDate()).slice(-2); // Добавляем ведущий ноль, если число меньше 10
+           var month = ("0" + (currentDate.getMonth() + 1)).slice(-2); // Добавляем ведущий ноль, если месяц меньше 10
+           var formattedDate = day + '.' + month;
+           datesInRange.push(formattedDate);
+           // Переходим к следующей дате
+           currentDate.setDate(currentDate.getDate() + 1);
+       }
+
+        //*********** График количественные ***************
+
+       document.addEventListener("DOMContentLoaded", function () {
+
+           var chartTaskDtos = /*[[${chartTaskDtos}]]*/ []; // Получаем список объектов ChartTaskDto
+
+            chartTaskDtos.forEach(function (chartTaskDto, index) {
+            var chartContainerId = 'chart' + index;
+            var chartContainer = document.getElementById(chartContainerId);
+            var myChart = echarts.init(chartContainer);
+
+            var completedOperations = chartTaskDto.completedOperations; // Заполняем массив значениями из completedOperations
+
+
+            var normPerDayValue = chartTaskDto.normPerShift;
+            var option = {
+                   xAxis: {
+                       type: 'category',
+                       data: datesInRange, // Ось X - даты
+                       axisLabel: {
+                           rotate: 90 // Устанавливаем угол поворота текста в градусах (90 градусов для вертикального направления)
+                       },
+                       axisLine: {
+                           symbol: ['none', 'arrow'], // Добавляем стрелку к оси X
+                           symbolSize: [8, 20], // Размер стрелки
+                           lineStyle: {
+                               color: 'black' // Цвет линии оси
+                           }
+                       }
+                   },
+                   yAxis: {
+                       name: 'Выполнено',
+                       type: 'value',
+                       axisLine: {
+                           show: true,
+                           symbol: ['none', 'arrow'], // Добавляем стрелки к оси Y
+                           symbolSize: [8, 20], // Размер стрелок
+                           lineStyle: {
+                               color: 'black'
+                           }
+                       },
+                       axisLabel: {
+                           formatter: '{value}'
+                       },
+                       axisPointer: {
+                           show: false
+                       },
+                       splitLine: { show: true }, // Отключаем линии сетки, если не нужны
+                       splitArea: { show: true }, // Отключаем заливку сетки, если не нужна
+                       axisTick: { show: true }, // Отключаем метки на оси, если не нужны
+
+                   },
+                       series: [{
+                       data: completedOperations, // Ось Y - значения
+                       type: 'bar',
+                           showBackground: true,
+                           backgroundStyle: {
+                               color: 'rgba(220, 220, 220, 0.8)'
+                           },
+                           // Устанавливаем ширину столбцов
+                           barWidth: '40%', // Например, 40% от ширины категории
+                           barCategoryGap: '20%', // Например, 20% от ширины категории
+                           label: { // Добавляем параметр label для отображения числовых значений
+                               show: true, // Показываем метку
+                               position: 'top', // Позиция метки над столбцом
+                               color: 'black', // Цвет текста метки
+                               formatter: '{c}', // Формат числового значения
+
+                           },
+                       },
+
+                           {
+                               name: 'Норма', // Название серии данных
+                               type: 'line', // Тип графика (линейный)
+                               yAxisIndex: 0, // Индекс оси, которая будет использоваться для этой серии данных
+                               symbol: 'none', // Убираем маркеры точек
+                               data: [normPerDayValue], // Задаем только одну точку для начала линии
+                               markLine: {
+                                   data: [
+                                       { yAxis: normPerDayValue, lineStyle: { color: 'red', type: 'dashed' } } // Добавляем горизонтальную линию
+                                   ]
+                               }
+                           }
+                       ]
+
+               };
+
+               myChart.setOption(option); // Устанавливаем опции для графика
+           });
+       });
+ //********************График часовые ************
+       document.addEventListener("DOMContentLoaded", function () {
+
+           var chartTaskDtosHourly = /*[[${chartTaskDtosHourly}]]*/ []; // Получаем список объектов ChartTaskDto
+
+           chartTaskDtosHourly.forEach(function (chartTaskDtoHourly, index) {
+               var chartContainerId = 'chartHourly' + index;
+               var chartContainer = document.getElementById(chartContainerId);
+               var myChartHourly = echarts.init(chartContainer);
+
+              // var completedOperations = chartTaskDto.completedOperations; // Заполняем массив значениями из completedOperations
+               var completedOperations = chartTaskDtoHourly.minutes; // Заполняем массив значениями из completedOperations
+               //var normPerDayValue = chartTaskDto.normPerShift;
+               var option = {
+                   xAxis: {
+                       type: 'category',
+                       data: datesInRange, // Ось X - даты
+                       axisLabel: {
+                           rotate: 90 // Устанавливаем угол поворота текста в градусах (90 градусов для вертикального направления)
+                       },
+                       axisLine: {
+                           symbol: ['none', 'arrow'], // Добавляем стрелку к оси X
+                           symbolSize: [8, 20], // Размер стрелки
+                           lineStyle: {
+                               color: 'black' // Цвет линии оси
+                           }
+                       }
+                   },
+                   yAxis: {
+                       name: 'Минуты',
+                       type: 'value',
+                       axisLine: {
+                           show: true,
+                           symbol: ['none', 'arrow'], // Добавляем стрелки к оси Y
+                           symbolSize: [8, 20], // Размер стрелок
+                           lineStyle: {
+                               color: 'black'
+                           }
+                       },
+                       axisLabel: {
+                           formatter: '{value}'
+                       },
+                       axisPointer: {
+                           show: false
+                       },
+                       splitLine: { show: true }, // Отключаем линии сетки, если не нужны
+                       splitArea: { show: true }, // Отключаем заливку сетки, если не нужна
+                       axisTick: { show: true }, // Отключаем метки на оси, если не нужны
+
+                   },
+                   series: [{
+                       data: completedOperations, // Ось Y - значения
+                       type: 'bar',
+                       showBackground: true,
+                       backgroundStyle: {
+                           color: 'rgba(220, 220, 220, 0.8)'
+                       },
+                       // Устанавливаем ширину столбцов
+                       barWidth: '40%', // Например, 40% от ширины категории
+                       barCategoryGap: '20%', // Например, 20% от ширины категории
+                       label: { // Добавляем параметр label для отображения числовых значений
+                           show: true, // Показываем метку
+                           position: 'top', // Позиция метки над столбцом
+                           color: 'black', // Цвет текста метки
+                           formatter: '{c}', // Формат числового значения
+
+                       },
+                   },
+                       {
+                           name: 'Норма', // Название серии данных
+                           type: 'line', // Тип графика (линейный)
+                           yAxisIndex: 0, // Индекс оси, которая будет использоваться для этой серии данных
+                           symbol: 'none', // Убираем маркеры точек
+                           /*data: [normPerDayValue], // Задаем только одну точку для начала линии
+                           markLine: {
+                               data: [
+                                   { yAxis: normPerDayValue, lineStyle: { color: 'red', type: 'dashed' } } // Добавляем горизонтальную линию
+                               ]
+                           } */
+                       }
+                   ]
+
+               };
+
+               myChartHourly.setOption(option); // Устанавливаем опции для графика
+           });
+       });
+
+ //********************************** График упаковка *****************************
+       document.addEventListener("DOMContentLoaded", function () {
+
+           var chartTaskDtosPackaging = /*[[${chartTaskDtosPackaging}]]*/ []; // Получаем список объектов ChartTaskDto
+
+
+           chartTaskDtosPackaging.forEach(function (chartTaskDtoPackaging, index) {
+               var chartContainerId = 'chartPackaging' + index;
+               var chartContainer = document.getElementById(chartContainerId);
+               var myChartPackaging = echarts.init(chartContainer);
+
+               var completedOperations = chartTaskDtoPackaging.completedOperations; // Заполняем массив значениями из completedOperations
+              // console.log(completedOperations);
+               var completedOperationsTwo = chartTaskDtoPackaging.completedOperationsTwo; // Заполняем массив значениями из completedOperations
+              // console.log(completedOperationsTwo);
+
+               var seriesData = [];
+               completedOperationsTwo.forEach(function(dayData, i) {
+                   seriesData.push(dayData); // Добавляем данные для каждого дня в массив данных для оси Y
+                  // seriesData.push(dayData.get(i)); // Добавляем данные для каждого дня в массив данных для оси Y
+                 //  console.log(seriesData)
+               });
+
+               var normPerDayValue = chartTaskDtoPackaging.normPerShift;
+               var option = {
+                   xAxis: {
+                       type: 'category',
+                       data: datesInRange, // Ось X - даты
+                       axisLabel: {
+                           rotate: 90 // Устанавливаем угол поворота текста в градусах (90 градусов для вертикального направления)
+                       },
+                       axisLine: {
+                           symbol: ['none', 'arrow'], // Добавляем стрелку к оси X
+                           symbolSize: [8, 20], // Размер стрелки
+                           lineStyle: {
+                               color: 'black' // Цвет линии оси
+                           }
+                       }
+                   },
+                   yAxis: {
+                       name: 'Выполнено',
+                       type: 'value',
+                       axisLine: {
+                           show: true,
+                           symbol: ['none', 'arrow'], // Добавляем стрелки к оси Y
+                           symbolSize: [8, 20], // Размер стрелок
+                           lineStyle: {
+                               color: 'black'
+                           }
+                       },
+                       axisLabel: {
+                           formatter: '{value}'
+                       },
+                       axisPointer: {
+                           show: false
+                       },
+                       splitLine: { show: true }, // Отключаем линии сетки, если не нужны
+                       splitArea: { show: true }, // Отключаем заливку сетки, если не нужна
+                       axisTick: { show: true }, // Отключаем метки на оси, если не нужны
+
+                   },
+                   series: [{
+                       data: completedOperations, // Ось Y - значения
+                      // data: seriesData[index],
+                       type: 'bar',
+                       showBackground: true,
+                       backgroundStyle: {
+                           color: 'rgba(220, 220, 220, 0.8)'
+                       },
+                       // Устанавливаем ширину столбцов
+                       barWidth: '40%', // Например, 40% от ширины категории
+                       barCategoryGap: '20%', // Например, 20% от ширины категории
+                       label: { // Добавляем параметр label для отображения числовых значений
+                           show: true, // Показываем метку
+                           position: 'top', // Позиция метки над столбцом
+                           color: 'black', // Цвет текста метки
+                           formatter: '{c}', // Формат числового значения
+
+                       },
+                   },
+                       {
+                           name: 'Норма', // Название серии данных
+                           type: 'line', // Тип графика (линейный)
+                           yAxisIndex: 0, // Индекс оси, которая будет использоваться для этой серии данных
+                           symbol: 'none', // Убираем маркеры точек
+                           data: [normPerDayValue], // Задаем только одну точку для начала линии
+                           markLine: {
+                               data: [
+                                   { yAxis: normPerDayValue, lineStyle: { color: 'red', type: 'dashed' } } // Добавляем горизонтальную линию
+                               ]
+                           }
+                       }
+                   ]
+
+               };
+
+               myChartPackaging.setOption(option); // Устанавливаем опции для графика
+           });
+       });
+
+</script>
+</body>
+</html>

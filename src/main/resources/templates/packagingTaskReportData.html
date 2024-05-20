@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+<div class="container">
+    <h2>Упаковка</h2>
+    <form id="cuttingForm" th:action="@{/categories/packagingTaskReportData}" method="post" th:object="${sizeByDateDto}">
+        <h5 rowspan="3" class="fw-bold" th:text="${currentUserName}" th:value="${userId}"></h5>
+        <h5 rowspan="3" class="fw-bold" th:text="${customersName}" ></h5>
+        <h5 rowspan="3" class="fw-bold" th:text="${categoryName}" ></h5>
+        <h5 rowspan="3" class="fw-bold" th:text="${materialName}" ></h5>
+        <!-- Форма выбора даты-->
+        <div class="form-group mx-2">
+            <label for="date">Выберите дату:</label>
+            <input type="date" id="date" name="date" class="form-control" required th:value="${date}" value="" autocomplete="off"/>
+            <!-- Скрытое поле для хранения выбранной даты-->
+            <input type="hidden" id="selectedDateGet" name="selectedDateGet" th:value="${date}" />
+        </div>
+        <h5>Задание на упаковку:</h5>
+
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Размер:</th>
+                <th>Рост:</th>
+                <th>Кол-во</th>
+                <th></th>
+                <th>Выполнение:</th>
+                <th>Остаток упаковать:</th>
+            </tr>
+            <tbody>
+            <tr th:each="sizByDate, iterStat : ${sizeByDateDto}">
+                <td th:text="${sizByDate.size}"></td>
+                <td th:text="${sizByDate.height}"></td>
+                <td th:text="${sizByDate.quantity}"></td>
+                <td style="text-align: right;">Кол-во:</td>
+                <td>
+
+                     <input type="number" class="form-control userInput" data-id="${sizByDate.getSizeByDateId}" name="userInput" style="max-width: 100px;" min="0" />
+                 </td>
+                <!-- <td><span th:text="${remains}" id="difference"></span></td>
+                <td><span th:text="${sizByDate.cutOut}" id="difference"></span></td>-->
+                <td><span th:text="${sizByDate.quantity} - ${sizByDate.cutOut}" id="difference"></span></td>
+             </tr>
+             <tr style="font-weight: bold;" th:each="warehouse : ${warehouseDto}">
+                 <td></td>
+                 <th style="text-align: right;">Итого:</th>
+                 <td th:text="${warehouseDto != null ? warehouseDto.inTotal : ''}" id="inTotal"></td>
+                 <!--<td th:text="${totalPackaging}" id="inTotal"></td>-->
+                 <td></td>
+                 <td th:text="${done}" id="done" name="done" th:value="${done}"></td>
+                 <!--<td th:text="${balance}" id="balance"></td>-->
+                 <td th:text="${warehouseDto != null ? warehouseDto.inTotal - totalPackaging : ''}" id="balance"></td>
+
+             </tr>
+         </tbody>
+         </table>
+
+         <h5 class="fw-bold">
+             <span style="margin-right: 20px;" th:text="${warehouseDto != null ? 'Норма в день: ' + warehouseDto.normPerDay : ''}"></span>
+         </h5>
+             <!-- Скрытые поля для передачи данных -->
+            <input type="hidden" id="startWork" th:value="${startWork}" />
+            <input type="hidden" id="endWork" th:value="${endWork}" />
+            <input type="hidden" id="selectedDatePost" name="date" th:value="${date}" />
+            <input type="hidden" id="userId" name="userId" th:value="${userId}" />
+            <input type="hidden" id="warehouse" name="warehouse" th:value="${warehouse}" />
+            <th:block th:each="dto : ${sizeByDateDto}">
+                <input type="hidden" th:value="${dto.sizeByDateId}" name="sizeByDateIds" />
+            </th:block>
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <!-- блок для отображения сообщения об успешном сохранении-->
+            <div th:if="${message}" class="alert alert-success" role="alert">
+                <p th:text="${message}"></p>
+            </div>
+
+    </form>
+</div>
+<script th:inline="javascript">
+    //******** Скрипт для проверки заполнения всех полей ****************
+    document.addEventListener('DOMContentLoaded', function() {
+        var form = document.getElementById('cuttingForm');
+        form.addEventListener('submit', function(event) {
+            var userInputFields = document.querySelectorAll('.userInput');
+            for (var i = 0; i < userInputFields.length; i++) {
+                if (userInputFields[i].value === '') {
+                    event.preventDefault(); // Предотвращаем отправку формы
+                    alert('Пожалуйста, заполните все поля');
+                    return;
+                }
+            }
+        });
+    });
+    //********************
+    // Функция для обработки ввода пользователем
+    function handleInput(event) {
+        var inputElement = event.target; // Получаем элемент input, в котором было введено значение
+        var doneElement = document.getElementById('done'); // Поле "Выполнение"
+        var balanceElement = document.getElementById('balance'); // Поле "Остаток"
+
+        var total = 0; // Переменная для хранения суммы введенных значений
+
+        // Обходим все элементы в столбце "Кол-во"
+        var userInputElements = document.querySelectorAll('.userInput');
+        userInputElements.forEach(function(userInputElement) {
+            var userInputValue = parseInt(userInputElement.value); // Получаем значение из текущего элемента ввода
+
+            // Проверяем, чтобы введенное значение было числом и не NaN
+            if (!isNaN(userInputValue)) {
+                var differenceElement = userInputElement.parentElement.nextElementSibling.querySelector('span');
+                var difference = parseInt(differenceElement.textContent);
+
+                // Проверяем, чтобы введенное значение не превышало значение в столбце "Остаток"
+                if (userInputValue <= difference) {
+                    total += userInputValue; // Обновляем сумму введенных значений
+                } else {
+                    // Если введенное значение превышает значение в столбце "Остаток", выводим сообщение об ошибке
+                    alert('Количество не может превышать значение в столбце "Остаток".');
+                    inputElement.value = ''; // Очищаем поле ввода
+                }
+            }
+        });
+
+        doneElement.textContent = total; // Обновляем значение в поле "Выполнение"
+    }
+
+    // Назначаем обработчик события на изменение ввода пользователем
+    var userInputElements = document.querySelectorAll('.userInput');
+    userInputElements.forEach(function(userInputElement) {
+        userInputElement.addEventListener('input', handleInput);
+    });
+
+    //******************************************
+    // Получаем элемент выбора даты
+    var dateInput = document.getElementById('date');
+
+    // Получаем данные о начальной и конечной датах из скрытых полей
+    var startWork = new Date(document.getElementById('startWork').value);
+    var endWork = new Date(document.getElementById('endWork').value);
+
+    // Преобразуем даты в строки формата yyyy-mm-dd, который используется в элементе выбора даты
+    var formattedStartDate = startWork.toISOString().split('T')[0];
+    var formattedEndDate = endWork.toISOString().split('T')[0];
+
+    // Устанавливаем ограничения для выбора даты в элементе ввода
+    dateInput.min = formattedStartDate; // Минимальная дата
+    dateInput.max = formattedEndDate; // Максимальная дата
+
+    // Получаем текущую дату
+    var today = new Date().toISOString().split('T')[0];
+
+    // Устанавливаем ограничение на выбор даты не позже сегодняшней
+    dateInput.max = today;
+
+    // Добавляем обработчик события для изменения значения элемента выбора даты
+    dateInput.addEventListener('change', function() {
+        var selectedDate = new Date(this.value);
+
+        // Проверяем, чтобы выбранная дата была в пределах периода startWork и endWork
+        if (selectedDate < startWork || selectedDate > endWork || selectedDate > today) {
+            alert('Выбранная дата должна быть в пределах от ' + formattedStartDate + ' до ' + formattedEndDate + ', и не позднее сегодняшней даты.');
+            this.value = ''; // Очищаем значение выбранной даты
+        }
+    });
+    //********************** Запрет ввода отрицательных чисел и букв *******************
+    document.addEventListener("DOMContentLoaded", function() {
+        // Находим все элементы с классом "userInput"
+        var userInputElements = document.querySelectorAll(".userInput");
+
+        // Для каждого такого элемента добавляем обработчик события input
+        userInputElements.forEach(function(element) {
+            element.addEventListener("input", function() {
+                // Получаем максимальное значение из соответствующей ячейки td
+                var maxValue = parseInt(this.parentNode.previousElementSibling.previousElementSibling.innerText.trim()) || 0;
+
+                // Получаем введенное значение и преобразуем его в число
+                var enteredValue = parseInt(this.value.trim()) || 0;
+
+                // Если введенное значение больше максимального или меньше 0, делаем его равным максимальному
+                if (enteredValue < 0 || isNaN(enteredValue)) {
+                    this.value = 0;
+                } else if (enteredValue > maxValue) {
+                    this.value = maxValue;
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

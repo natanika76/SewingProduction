@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br /><br />
+
+<div class="container">
+    <h2>Отчет по отработанным задачам за период:</h2>
+
+    <form th:action="@{/admin/workedout}" method="get" class="form-inline">
+        <div class="form-group mx-2">
+            <label for="startDate">От:</label>
+            <input type="date" id="startDate" name="startDate" class="form-control" required th:value="${startDate}" />
+        </div>
+
+        <div class="form-group mx-2">
+            <label for="endDate">До:</label>
+            <input type="date" id="endDate" name="endDate" class="form-control" required th:value="${endDate}" />
+        </div>
+
+        <!-- Добавляем выпадающий список для выбора категории -->
+        <div class="form-group mx-2">
+            <label for="category">Категория:</label>
+            <select id="category" name="category" class="form-select">
+                <!-- Используем Thymeleaf для генерации опций категорий -->
+                <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}"
+                        th:selected="${category.id eq selectedCategoryId}"></option>
+            </select>
+        </div>
+
+        <!--Кнопка-->
+        <div class="form-group d-flex justify-content-end p-2">
+            <button type="submit" class="btn btn-primary">Ок</button>
+        </div>
+    </form>
+
+    <!-- Добавляем условие для показа таблицы в зависимости от выбранной категории -->
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th style="width: 100px;">Имя швеи</th>
+            <th>Тип</th>
+            <!-- Используем Thymeleaf для генерации заголовков дат -->
+            <th th:each="workedByDate : ${workedList[0].workedByDateList}" th:text="${T(java.time.format.DateTimeFormatter).ofPattern('dd.MM.yy').format(workedByDate.date)}"></th>
+            <th>Общее кол-во</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Используем Thymeleaf для генерации строк -->
+        <th:block th:each="workedDto : ${workedList}">
+            <tr>
+                <td rowspan="3" class="fw-bold" th:text="${workedDto.seamstressName}"></td>
+                <td>Кол-е</td>
+                <!-- Используем Thymeleaf для генерации данных PaymentsByDate -->
+                <td th:each="workedByDate : ${workedDto.workedByDateList}" th:text="${workedByDate.quantitativeWorked}"></td>
+                <td class="fw-bold" th:text="${workedDto.totalWorked.quantitativeWorked}"></td>
+            </tr>
+            <tr>
+                <td>Вр-е</td>
+                <!-- Используем Thymeleaf для генерации данных PaymentsByDate -->
+                <td th:each="workedByDate : ${workedDto.workedByDateList}" th:if="${workedByDate != null and workedByDate.hourlyWorked != null}">
+                    <span th:text="${workedByDate.getHourlyWorkedToString()}"></span>
+                </td>
+                <td class="fw-bold" th:if="${workedDto.totalWorked != null and workedDto.totalWorked.hourlyWorked != null}" th:text="${workedDto.totalWorked.hourlyWorkedToString}"></td>
+            </tr>
+            <tr>
+                <td>Уп-ка</td>
+                <!-- Используем Thymeleaf для генерации данных PaymentsByDate -->
+                <td th:each="workedByDate : ${workedDto.workedByDateList}" th:text="${workedByDate.packagingWorked}"></td>
+                <td class="fw-bold" th:text="${workedDto.totalWorked.packagingWorked}"></td>
+            </tr>
+        </th:block>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

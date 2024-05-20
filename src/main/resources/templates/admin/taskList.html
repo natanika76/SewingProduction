@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+<div class="container">
+    <h2>Задачи</h2>
+    <!-- Используем форму для отправки выбора категории на сервер -->
+    <form id="categoryForm">
+        <label for="categorySelect" class="form-label">Выберите категорию:</label>
+        <select id="categorySelect" name="categoryId" class="form-select" onchange="loadTasks()">
+            <!-- Используем th:each для обработки категорий -->
+            <option th:each="category, iterStat : ${categories}"
+                    th:value="${category.id}"
+                    th:text="${category.name}"
+                    th:selected="${iterStat.index == 0}"></option>
+        </select>
+    </form>
+
+    <a th:href="@{/admin/tasks/new}" class="btn btn-primary mt-2">Добавить новую задачу</a>
+
+    <div id="tasksTableBody">
+    <!-- Сюда будут добавляться строки с задачами -->
+    </div>
+
+</div>
+<script th:inline="javascript">
+
+    document.addEventListener('DOMContentLoaded', function () {
+        loadTasks();
+    });
+
+    function loadTasks() {
+        // Получаем выбранное значение из селекта
+        var categoryId = document.getElementById('categorySelect').value;
+
+        // Отправляем запрос на сервер для загрузки задач через AJAX
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/admin/tasks/category/' + categoryId, true);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                // Вставляем полученный HTML в тело таблицы
+                document.getElementById('tasksTableBody').innerHTML = xhr.responseText;
+
+                calculateAndDisplayTotalTime();
+            }
+        };
+        xhr.send();
+    }
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+
+<div class="container">
+    <h2>Отметить количество выполненных задач или часов: </h2>
+    <br>
+    <h5 rowspan="3" class="fw-bold" th:text="${categoryName}" ></h5>
+    <h5 rowspan="3" class="fw-bold" th:text="${nameMaterial}" ></h5>
+    <br>
+
+
+    <!-- Таблица для задач типа QUANTITATIVE -->
+    <h4>Количественные задачи:</h4>
+    <table class="table">
+        <!-- Заголовки столбцов -->
+        <thead>
+        <tr>
+            <th scope="col">операция</th>
+            <th scope="col">t сек</th>
+            <th scope="col">р/шт</th>
+            <th scope="col">норма / смен</th>
+            <th scope="col">сделано шт.</th> <!-- Новый столбец -->
+        </tr>
+        </thead>
+        <!-- Тело таблицы -->
+        <tbody>
+        <tr th:each="task : ${quantitativeTasks}" th:data-task-id="${task.id}">
+            <!-- Здесь выводятся данные для каждой задачи типа QUANTITATIVE -->
+            <td th:text="${task.name}"></td>
+            <td class="timeInSeconds" th:text="${task.timeInSeconds}"></td>
+
+            <!-- <td th:text="${task.timeInSeconds}"></td>-->
+            <td class="costPerPiece" th:text="${task.costPerPiece}"></td>
+
+            <!-- <td th:text="${task.costPerPiece}"></td>-->
+            <td th:text="${task.normPerShift}"></td>
+            <td>
+                <input type="number" th:value="${task.operations}" name="operations" style="width: 55px;" onchange="markChanges(); checkMaxValue(this);">
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <br>
+    <br>
+
+    <!-- Таблица для задач типа HOURLY -->
+    <h4>Почасовые задачи:</h4>
+    <table class="table">
+        <!-- Заголовки столбцов -->
+        <thead>
+        <tr>
+            <th scope="col">операция</th>
+            <th scope="col">часовая ставка</th>
+            <th scope="col">отработано времени</th>
+        </tr>
+        </thead>
+        <!-- Тело таблицы -->
+        <tbody>
+        <tr th:each="task : ${hourlyTasks}" th:data-task-id="${task.id}">
+            <!-- Здесь выводите данные для каждой задачи типа HOURLY -->
+            <td th:text="${task.name}"></td>
+            <td th:text="${hourlyRate}"></td>
+            <td>
+                <input type="number" th:value="${task.hours}" style="width: 45px;" id="hoursWorked" name="hoursWorked.hours" onchange="markChanges();" required/>
+                <span> : </span>
+                <input type="number" th:value="${task.minutes}" style="width: 45px;" id="minutesWorked" name="hoursWorked.minutes" onchange="markChanges();" required step="5"/>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <br>
+    <br>
+
+    <!-- Таблица для задач типа QUANTITATIVE -->
+    <h4>Задачи по упаковке:</h4>
+    <table class="table">
+        <!-- Заголовки столбцов -->
+        <thead>
+        <tr>
+            <th scope="col">операция</th>
+            <th scope="col">р/шт</th>
+            <th scope="col">упаковано шт.</th> <!-- Новый столбец -->
+        </tr>
+        </thead>
+        <!-- Тело таблицы -->
+        <tbody>
+        <tr th:each="task : ${packagingTasks}" th:data-task-id="${task.id}">
+            <!-- Здесь выводите данные для каждой задачи типа QUANTITATIVE -->
+            <td th:text="${task.name}"></td>
+            <td th:text="${task.costPerPiece}"></td>
+            <td>
+                <input type="number" th:value="${task.operations}" name="operations" style="width: 55px;" onchange="markChanges(); checkMaxValue(this);">
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <button class="btn btn-primary" onclick="saveChanges()">Save</button>
+</div>
+
+
+<!-- Модальное окно для сообщения об успешном сохранении -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="successModalLabel">Успех</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Изменения успешно сохранены!
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+  /*  // Получаем выбранный материал
+    var selectedMaterial = $('#nameMaterial').val();
+
+    // Отправляем AJAX-запрос
+    $.ajax({
+        type: "GET",
+        url: "/category/" + categoryId + "?selectedMaterial=" + selectedMaterial,
+        success: function(data) {
+            // Обработка успешного ответа
+            console.log("Материал успешно отправлен на контроллер");
+        },
+        error: function(xhr, status, error) {
+            // Обработка ошибки
+            console.error("Произошла ошибка при отправке материала на контроллер");
+        }
+    });*/
+    //***********
+    var changesMade = false;
+
+    function checkMaxValue(input) {
+        var row = $(input).closest('tr');
+        var normPerShift = parseInt(row.find('td:eq(3)').text(), 10); // Получаем значение нормы/смену из третьего столбца
+        var maxValue = normPerShift * 4; // Умножаем на 4
+
+        var value = parseInt(input.value, 10);
+
+        if (isNaN(value) || value > maxValue) {
+            alert('Максимальное допустимое число - ' + maxValue);
+            input.value = maxValue;
+        }
+    }
+
+
+    function markChanges() {
+        changesMade = true;
+    }
+
+    function saveChanges() {
+        if (!changesMade) {
+            alert('Нет внесенных изменений.');
+            return;
+        }
+       // var selectedMaterial = $('#nameMaterial').val(); // Получаем выбранный материал
+        var selectedMaterial = $('h5.fw-bold').eq(1).text(); // Получаем текст второго элемента h5 с классом fw-bold
+
+        var data = [];
+        $('tbody tr').each(function () {
+            var row = $(this);
+            var taskId = row.data('task-id');
+            var operations = parseInt(row.find('input[name="operations"]').val(), 10);
+
+            // Добавляем информацию о часах и минутах для каждой задачи
+            var hours = parseInt(row.find('input[name="hoursWorked.hours"]').val(), 10) || 0;
+            var minutes = parseInt(row.find('input[name="hoursWorked.minutes"]').val(), 10) || 0;
+
+            data.push({taskId: taskId, operations: operations, hours: hours, minutes: minutes, nameMaterial: selectedMaterial});
+        });
+
+
+        var csrfToken = $("meta[name='_csrf']").attr("content");
+        var csrfHeader = $("meta[name='_csrf_header']").attr("content");
+
+        $.ajax({
+            type: 'POST',
+            url: '/operations/save',
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader(csrfHeader, csrfToken);
+            },
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function () {
+                $('#successModal').modal('show');
+                changesMade = false;
+            },
+            error: function () {
+                alert('Произошла ошибка при сохранении изменений.');
+            }
+        });
+    }
+
+    window.addEventListener('beforeunload', function (e) {
+        if (changesMade && !confirm('У вас есть несохраненные данные. Вы уверены, что хотите покинуть страницу?')) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+
+    $('#successModal .btn-primary').click(function () {
+        $('#successModal').modal('hide');
+    });
+
+    $('#successModal').on('hidden.bs.modal', function () {
+        // Дополнительные действия при закрытии модального окна
+    });
+
+</script>
+
+</body>
+</html>
+

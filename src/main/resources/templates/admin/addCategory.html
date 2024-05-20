@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+
+<div class="container">
+    <h2>Новая категория</h2>
+    <form th:action="@{/admin/categories/new}" method="post">
+        <div class="mb-3">
+            <label for="name" class="form-label">Название категории</label>
+            <input type="text" class="form-control" id="name" name="name" th:value="${category.name}" required/>
+        </div>
+        <div class="mb-3">
+            <label for="customer" class="form-label">Выберите заказчика</label>
+            <select class="form-select" id="customer" name="customer.id" required>
+                <option th:each="customer : ${customers}" th:value="${customer.id}" th:text="${customer.name}"></option>
+            </select>
+        </div>
+        <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+</div>
+
+</body>
+</html>

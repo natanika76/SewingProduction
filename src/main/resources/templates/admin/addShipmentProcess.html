@@ -1,0 +1,201 @@
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+
+<div class="container">
+    <h2>Отгрузка</h2>
+
+
+    <form id="shipmentForm" th:action="@{/admin/shipmentProcess/add}" method="post"  class="form-inline"th:object="${warehouse}" >
+        <h5 rowspan="3" class="fw-bold" th:text="${customersName}" ></h5>
+        <h5 rowspan="3" class="fw-bold" th:text="${categoryName}" ></h5>
+        <h5 rowspan="3" class="fw-bold" th:text="${materialName}" ></h5>
+
+        <div class="form-group mx-2">
+            <label for="date">Дата:</label>
+            <input type="date" id="date" name="date" class="form-control" required th:value="${date}" />
+        </div>
+        <h5>Отгрузка:</h5>
+
+       <table class="table">
+            <thead>
+            <tr>
+                <th>Размер:</th>
+                <th>Рост:</th>
+                <th>Кол-во</th>
+                <th>Упак:</th>
+                <th></th>
+                <th>Отгружено:</th>
+                <th>Остаток:</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="sizByDate, iterStat : ${sizeByDateDto}">
+                <td th:text="${sizByDate.size}"></td>
+                <td th:text="${sizByDate.height}"></td>
+                <td th:text="${sizByDate.quantity}"></td>
+                <td th:text="${sizByDate.done}"></td>
+                <td style="text-align: right;">Кол-во:</td>
+                <td>
+           <!--     <input type="text" class="form-control userInput"  data-id="${sizByDate.getSizeByDateId}" name="userInput" style="max-width: 100px;" /> -->
+                    <input type="number" class="form-control userInput" data-id="${sizByDate.getSizeByDateId}" name="userInput" style="max-width: 100px;" min="0" max="99999999"/>
+
+                </td>
+                <td th:text="${sizByDate.fullDone}"></td>
+            </tr>
+            <tr style="font-weight: bold;" th:each="warehouse : ${warehouseDto}">
+                <td></td>
+                <th style="text-align: right;">Итого:</th>
+                <td th:text="${warehouse.inTotal}" id="inTotal"></td>
+                <td th:text="${warehouse.done}" id="balance1"></td>
+                <td></td>
+                <td th:text="${done}" id="done" name="done" th:value="${done}"></td>
+                <td th:text="${warehouse.target}" id="balance2"></td>
+            </tbody>
+       </table>
+
+        <td>
+
+        <input type="hidden" id="selectedDatePost" name="date" th:value="${date}" />
+        <input type="hidden" id="userId" name="userId" th:value="${userId}" />
+        <input type="hidden" id="warehouse" name="warehouse" th:value="${warehouse}" />
+
+        <th:block th:each="dto : ${sizeByDateDto}">
+            <input type="hidden" th:value="${dto.sizeByDateId}" name="sizeByDateIds" />
+        </th:block>
+
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+
+        <!-- блок для отображения сообщения об успешном сохранении-->
+        <div th:if="${message}" class="alert alert-success" role="alert">
+            <p th:text="${message}"></p>
+        </div>
+    </form>
+</div>
+
+<script th:inline="javascript">
+
+    // функция подсчитывает количество введённых данных
+           document.addEventListener("DOMContentLoaded", function() {
+        // Находим все элементы с классом "userInput"
+        var userInputElements = document.querySelectorAll(".userInput");
+
+        // Для каждого такого элемента добавляем обработчик события input
+        userInputElements.forEach(function(element) {
+        element.addEventListener("input", function() {
+        // Обновляем сумму введённых значений
+        var total = 0;
+        userInputElements.forEach(function(inputElement) {
+        total += parseInt(inputElement.value) || 0; // Преобразуем значение в число или 0, если значение некорректно
+        });
+        // Находим элемент, в который нужно вставить сумму, и обновляем его текст
+        var doneElement = document.getElementById("done");
+        if (doneElement) {
+        doneElement.textContent = total;
+        }
+        });
+        });
+    });
+//**********
+    document.addEventListener("DOMContentLoaded", function() {
+        var alert = document.querySelector(".alert");
+
+        if (alert) {
+            // Добавляем обработчик для предотвращения закрытия окна при клике на само окно
+            alert.addEventListener("click", function(event) {
+                // Прекращаем распространение события, чтобы он не попал до document и не вызвал закрытие окна.
+                event.stopPropagation();
+                // Закрываем окно алерта
+                alert.style.display = "none";
+                // Перенаправляем пользователя на другую страницу
+                window.location.href = "/admin/shipmentProcess";
+            });
+
+            // Добавляем обработчик события клика для всего документа
+            document.addEventListener("click", function(event) {
+                // Если клик выполнен вне окна алерта, скрываем его и перенаправляем на другую страницу
+                if (!alert.contains(event.target)) {
+                    alert.style.display = "none";
+                    window.location.href = "/admin/shipmentProcess";
+                }
+            });
+
+            // Добавляем обработчик для кнопок закрытия алерта
+            var alertCloseButtons = alert.querySelectorAll("button.close");
+
+            alertCloseButtons.forEach(function(button) {
+                button.addEventListener("click", function() {
+                    var alert = this.parentElement;
+                    alert.style.display = "none";
+                    window.location.href = "/admin/shipmentProcess";
+                });
+            });
+        }
+    });
+    //***************
+     document.addEventListener("DOMContentLoaded", function() {
+        // Находим все элементы с классом "userInput"
+        var userInputElements = document.querySelectorAll(".userInput");
+
+        // Для каждого такого элемента добавляем обработчик события input
+        userInputElements.forEach(function(element) {
+            element.addEventListener("input", function() {
+                // Получаем максимальное значение из соответствующей ячейки td
+                var maxValue = parseInt(this.parentNode.previousElementSibling.previousElementSibling.innerText.trim()) || 0;
+
+                // Получаем введенное значение и преобразуем его в число
+                var enteredValue = parseInt(this.value.trim()) || 0;
+
+                // Если введенное значение больше максимального, делаем его равным максимальному
+                if (enteredValue > maxValue) {
+                    this.value = maxValue;
+                }
+            });
+        });
+    });
+     //*********************** Скрипт для предотврашения сохранения формы с незаполненными полями ******
+            document.addEventListener('DOMContentLoaded', function() {
+                var form = document.getElementById('shipmentForm');
+                form.addEventListener('submit', function(event) {
+                    var userInputFields = document.querySelectorAll('.userInput');
+                    for (var i = 0; i < userInputFields.length; i++) {
+                        if (userInputFields[i].value === '') {
+                            event.preventDefault(); // Предотвращаем отправку формы
+                            alert('Пожалуйста, заполните все поля');
+                            return;
+                        }
+                    }
+                });
+            });
+            //**************************************
+    document.addEventListener("DOMContentLoaded", function() {
+        // Находим все элементы с классом "userInput"
+        var userInputElements = document.querySelectorAll(".userInput");
+
+        // Для каждого такого элемента добавляем обработчик события input
+        userInputElements.forEach(function(element) {
+            element.addEventListener("input", function() {
+                // Получаем максимальное значение из соответствующей ячейки td
+                var maxValue = parseInt(this.parentNode.previousElementSibling.previousElementSibling.innerText.trim()) || 0;
+
+                // Получаем введенное значение и преобразуем его в число
+                var enteredValue = parseInt(this.value.trim()) || 0;
+
+                // Если введенное значение больше максимального или меньше 0, делаем его равным максимальному
+                if (enteredValue < 0 || isNaN(enteredValue)) {
+                    this.value = 0;
+                } else if (enteredValue > maxValue) {
+                    this.value = maxValue;
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

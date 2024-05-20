@@ -1,0 +1,98 @@
+
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <!--Добавим кнопку для возврата на предыдущую страницу, если не на странице входа или категорий-->
+        <div th:if="${requestURI != '/login' and requestURI != '/categories' and requestURI != '/demigod/chpas'}">
+            <button class="btn btn-outline-light me-0" onclick="goBack()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16" style="font-weight: bold;">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"></path>
+                </svg>
+            </button>
+        </div>
+
+        <script>
+            function goBack() {
+                window.history.length > 1 ? window.history.back() : null;
+            }
+        </script>
+        <a class="navbar-brand me-0" th:href="@{/index}">Швейное производство</a>
+        <!-- Добавим кнопку гамбургера -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Добавим контейнер для раскрывающегося меню -->
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item" th:classappend="${#authorization.expression('isAuthenticated()')} ? 'active' : ''">
+                    <a class="nav-link" th:href="@{/logout}">Logout</a>
+                </li>
+                <!-- Используем Thymeleaf для отображения элементов в зависимости от ролей -->
+                <li class="nav-item" th:if="${#authorization.expression('hasRole(''USER'')')}"
+                    th:classappend="${#authorization.expression('hasRole(''USER'')') ? 'active' : ''}">
+                    <a class="nav-link" th:href="@{/categories/seamstressReport}">Начисления</a>
+                </li>
+                <li class="nav-item" th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''DEMIGOD'')')}" th:classappend="${#authorization.expression('hasRole(''ADMIN'')') ? 'active' : ''}">
+                    <a class="nav-link" th:href="@{/admin/earnings}">Начисления</a>
+                </li>
+               <!-- <li class="nav-item" th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''DEMIGOD'')')}" th:classappend="${#authorization.expression('hasRole(''ADMIN'')') ? 'active' : ''}">
+                    <a class="nav-link" th:href="@{/admin/workedout}">Отработано</a>
+                </li>-->
+                <li class="nav-item" th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''DEMIGOD'')')}" th:classappend="${#authorization.expression('hasRole(''ADMIN'')') ? 'active' : ''}">
+                    <a class="nav-link" th:href="@{/admin/seamstresses}">Швеи</a>
+                </li>
+                <li class="nav-item" th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''DEMIGOD'')')}" th:classappend="${#authorization.expression('hasRole(''ADMIN'')') ? 'active' : ''}">
+                    <a class="nav-link" th:href="@{/admin/customers}">Заказчики</a>
+                </li>
+                <li class="nav-item" th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''DEMIGOD'')')}" th:classappend="${#authorization.expression('hasRole(''ADMIN'')') ? 'active' : ''}">
+                    <a class="nav-link" th:href="@{/admin/categories}">Категории</a>
+                </li>
+                <li class="nav-item" th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''DEMIGOD'')')}" th:classappend="${#authorization.expression('hasRole(''DEMIGOD'')') ? 'active' : ''}">
+                    <a class="nav-link" th:href="@{/admin/tasks}">Задачи</a>
+                </li>
+                <li class="nav-item" th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''DEMIGOD'')')}" th:classappend="${#authorization.expression('hasRole(''DEMIGOD'')') ? 'active' : ''}">
+                    <a class="nav-link" th:href="@{/admin/operations}">Выполненные задачи</a>
+                </li>
+                <li class="nav-item" th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''DEMIGOD'')')}"
+                    th:classappend="${#authorization.expression('hasRole(''DEMIGOD'')') ? 'active' : ''}">
+                    <a class="nav-link" th:href="@{/admin/warehouseProcess}">Склад</a>
+                </li>
+
+                <li class="nav-item" th:if="${#authorization.expression('hasRole(''USER'')')}"
+                    th:classappend="${#authorization.expression('hasRole(''USER'')') ? 'active' : ''}">
+                    <a class="nav-link" th:href="@{/categories/cuttingTaskReport}">Крой</a>
+                </li>
+                <li class="nav-item" th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''DEMIGOD'')')}" th:classappend="${#authorization.expression('hasRole(''ADMIN'')') ? 'active' : ''}">
+                    <a class="nav-link" th:href="@{/admin/cuttingProcess}">Крой</a>
+                </li>
+                <li class="nav-item" th:if="${#authorization.expression('hasRole(''USER'')')}"
+                    th:classappend="${#authorization.expression('hasRole(''USER'')') ? 'active' : ''}">
+                    <a class="nav-link" th:href="@{/categories/packagingTaskReport}">Упаковка</a>
+                </li>
+                <li class="nav-item" th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''DEMIGOD'')')}" th:classappend="${#authorization.expression('hasRole(''ADMIN'')') ? 'active' : ''}">
+                    <a class="nav-link" th:href="@{/admin/packagingProcess}">Упаковка</a>
+                </li>
+                <li class="nav-item" th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''DEMIGOD'')')}" th:classappend="${#authorization.expression('hasRole(''ADMIN'')') ? 'active' : ''}">
+                    <a class="nav-link" th:href="@{/admin/shipmentProcess}">Отгрузка</a>
+                </li>
+                <li class="nav-item" th:if="${#authorization.expression('hasRole(''DEMIGOD'')')}" th:classappend="${#authorization.expression('hasRole(''DEMIGOD'')') ? 'active' : ''}">
+                    <a class="nav-link" th:href="@{/demigod}">Super-admin</a>
+                <!--<li class="nav-item" th:if="${#authorization.expression('hasRole(''ADMIN'') or hasRole(''DEMIGOD'')')}" th:classappend="${#authorization.expression('hasRole(''ADMIN'')') ? 'active' : ''}">
+                    <a class="nav-link" th:href="@{/admin/reports}">Отчёты</a>
+                </li>-->
+
+            </ul>
+            <ul class="navbar-nav ml-auto"> <!-- Используем ml-auto для выравнивания по правому краю -->
+                <li class="nav-item" th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+                    <a class="nav-link" th:href="@{/download-latest-backup}" title="Скачать последний бэкап">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5zM.5 5.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1H1.707l3.147 3.146a.5.5 0 0 1-.708.708l-4-4a.5.5 0 0 1 0-.708zM8 1a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-1 0v-9A.5.5 0 0 1 8 1z"/>
+                        </svg>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

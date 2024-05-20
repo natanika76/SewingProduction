@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/headFragment}"></head>
+
+<body>
+
+<div th:replace="~{fragments/headerFragment}"></div>
+
+<br/><br/>
+
+<div class="container">
+    <h2>Создать новую задачу</h2>
+    <form th:action="@{/admin/tasks/new}" method="post" th:object="${task}">
+        <div class="mb-3">
+            <label for="taskType" class="form-label">Тип задачи</label>
+            <select class="form-control" id="taskType" name="taskType" th:field="*{taskType}" required>
+                <option th:each="type : ${T(ru.vilas.sewing.dto.TaskTypes).values()}" th:value="${type}" th:text="${type.russianName}"></option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="category" class="form-label">Категория</label>
+            <select class="form-control" id="category" name="category" th:field="*{category.id}" required>
+                <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}" th:selected="${category.id eq task.category?.id}"></option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="name" class="form-label">Название</label>
+            <input type="text" class="form-control" id="name" name="name" th:field="*{name}" required/>
+        </div>
+
+        <div class="mb-3">
+            <label for="timeInSeconds" class="form-label">Время в секундах</label>
+            <input type="number" class="form-control" id="timeInSeconds" name="timeInSeconds" th:field="*{timeInSeconds}" step="1" required/>
+        </div>
+
+
+        <div class="mb-3">
+            <label for="costPerPiece" class="form-label">Стоимость за штуку</label>
+            <div class="input-group">
+                <span class="input-group-text">&#8381;</span>
+                <input type="number" class="form-control" id="costPerPiece" name="costPerPiece" th:field="*{costPerPiece}" step="0.01" required/>
+            </div>
+            <small id="costPerPieceHelp" class="form-text text-muted">Введите стоимость в рублях (например, 12.34).</small>
+        </div>
+
+        <div class="mb-3">
+            <label for="normPerShift" class="form-label">Норма за смену</label>
+            <input type="number" class="form-control" id="normPerShift" name="normPerShift" th:field="*{normPerShift}" step="1.00" value  required/>
+        </div>
+
+        <div th:if="${validationErrors}" class="alert alert-danger">
+            <ul>
+                <li th:each="error : ${validationErrors}" th:text="${error.defaultMessage}"></li>
+            </ul>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Создать</button>
+    </form>
+</div>
+
+</body>
+</html>
